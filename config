@@ -21,14 +21,14 @@ set $term konsole
 # on the original workspace that the command was run on.
 set $menu dmenu_path | wmenu | xargs swaymsg exec --
 #Your preferred browser
-set $browser brave
+set $browser yandex-browser-stable
 #Your preferred file manager
 set $filemanager dolphin
 
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+output * bg /home/rek/1.png fill
 #
 # Example configuration:
 #
@@ -40,10 +40,10 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 #
 # Example configuration:
 #
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-#          before-sleep 'swaylock -f -c 000000'
+   exec swayidle -w \
+          timeout 300 'swaylock -f -c 000000' \
+          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+          before-sleep 'swaylock -f -c 000000'
 #
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
@@ -64,6 +64,11 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
     xkb_variant "qwerty"
     xkb_options "grp:caps_toggle, grp:shift_caps_toggle, grp_led:caps"
 }
+
+bindsym Print exec grim ~/screenshots/-"$(date +%s)".png
+bindsym $mod+Print exec grim -g "$(slurp)" ~/screenshots/-"$(date +%s)".png
+
+
 #
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
@@ -73,7 +78,6 @@ input "type:pointer" accel_profile flat
 ### Key bindings
 #
 # Basics:
-#
     # Start a terminal
     bindsym $mod+Return exec $term
 
@@ -125,31 +129,32 @@ input "type:pointer" accel_profile flat
     bindsym $mod+Shift+Down move down
     bindsym $mod+Shift+Up move up
     bindsym $mod+Shift+Right move right
-#
+
+
 # Workspaces:
 #
     # Switch to workspace
-    bindsym $mod+1 workspace number 1: ApplicationsWindow
-    bindsym $mod+2 workspace number 2: Browser
-    bindsym $mod+3 workspace number 3: Console
-    bindsym $mod+4 workspace number 4: FileManager
-    bindsym $mod+5 workspace number 5:
-    bindsym $mod+6 workspace number 6
-    bindsym $mod+7 workspace number 7
-    bindsym $mod+8 workspace number 8
-    bindsym $mod+9 workspace number 9
-    bindsym $mod+0 workspace number 10
+    bindsym --to-code $mod+1 workspace number 1
+    bindsym --to-code $mod+2 workspace number 2
+    bindsym --to-code $mod+3 workspace number 3
+    bindsym --to-code $mod+4 workspace number 4
+    bindsym --to-code $mod+5 workspace number 5
+    bindsym --to-code $mod+6 workspace number 6
+    bindsym --to-code $mod+7 workspace number 7
+    bindsym --to-code $mod+8 workspace number 8
+    bindsym --to-code $mod+9 workspace number 9
+    bindsym --to-code $mod+0 workspace number 10
     # Move focused container to workspace
-    bindsym $mod+Shift+1 move container to workspace number 1: ApplicationsWindow
-    bindsym $mod+Shift+2 move container to workspace number 2: Browser
-    bindsym $mod+Shift+3 move container to workspace number 3: Console
-    bindsym $mod+Shift+4 move container to workspace number 4: FileManager
-    bindsym $mod+Shift+5 move container to workspace number 5
-    bindsym $mod+Shift+6 move container to workspace number 6
-    bindsym $mod+Shift+7 move container to workspace number 7
-    bindsym $mod+Shift+8 move container to workspace number 8
-    bindsym $mod+Shift+9 move container to workspace number 9
-    bindsym $mod+Shift+0 move container to workspace number 10
+    bindsym --to-code $mod+Shift+1 move container to workspace number 1
+    bindsym --to-code $mod+Shift+2 move container to workspace number 2
+    bindsym --to-code $mod+Shift+3 move container to workspace number 3
+    bindsym --to-code $mod+Shift+4 move container to workspace number 4
+    bindsym --to-code $mod+Shift+5 move container to workspace number 5
+    bindsym --to-code $mod+Shift+6 move container to workspace number 6
+    bindsym --to-code $mod+Shift+7 move container to workspace number 7
+    bindsym --to-code $mod+Shift+8 move container to workspace number 8
+    bindsym --to-code $mod+Shift+9 move container to workspace number 9
+    bindsym --to-code $mod+Shift+0 move container to workspace number 10
     # Note: workspaces can have any name you want, not just numbers.
     # We just use 1-10 as the default.
 #
@@ -214,22 +219,30 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
+# PERSONAL SETTINGS
 #
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
+  #Volume control
+  
+    bindsym --to-code XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
+    bindsym --to-code XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
+    bindsym --to-code XF86AudioMute exec amixer -q set Master toggle
+    
+    bindsym --to-code XF86MonBrightnessUp exec sh ~/.config/sway/backlight.sh -inc 20
+    bindsym --to-code XF86MonBrightnessDown exec sh ~/.config/sway/backlight.sh -dec 20
+
+  # A 10-pixel border around every window.
+  gaps inner 5
+
+  # Removes the title bar of each window.
+  default_border pixel 3
+  
+  #Bitwarden
+    
+    bindsym --to-code $mod+c exec flatpak run com.bitwarden.desktop
+
 bar {
-    position top
-
-    # When the status_command prints a new line to stdout, swaybar updates.
-    # The default just shows the current date and time.
-    status_command while date +'%Y-%m-%d %X'; do sleep 1; done
-
-    colors {
-        statusline #ffffff
-        background #a0a0ff
-        inactive_workspace #32323200 #32323200 #5c5c5c
-    }
+    swaybar_command waybar
 }
 
 include /etc/sway/config.d/*
+
