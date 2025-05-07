@@ -35,7 +35,6 @@ input "2:14:SynPS/2_Synaptics_TouchPad" {
 # Раскладка клавиатуры (переключение по Caps Lock)
 input * {
     xkb_layout "us,ru"
-    xkb_variant "qwerty"
     xkb_options "grp:caps_toggle, grp:shift_caps_toggle, grp_led:caps"
 }
 
@@ -53,10 +52,10 @@ input "type:pointer" accel_profile flat
     bindsym $mod+Return exec $term
 
     # Запуск браузера
-    bindsym $mod+Mod1+b exec $browser
+    bindsym $mod+x exec $browser
 
     # Запуск файлового менеджера
-    bindsym $mod+Mod1+e exec $filemanager
+    bindsym $mod+z exec $filemanager
 
     # Закрыть текущее окно
     bindsym $mod+Shift+q kill
