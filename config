@@ -1,3 +1,14 @@
+# Sway WM Configuration File
+# Created by [Your Name], last updated 2023-11-15
+# GitHub: https://github.com/[yourusername]/sway-config
+#
+# Этот файл конфигурации для Sway (Wayland композитор)
+# Вдохновлен i3wm, но работает на Wayland
+# Основные особенности:
+# - Vim-like навигация
+# - Минималистичный дизайн
+# - Полная поддержка горячих клавиш
+
 ### Переменные
 #
 # Клавиша-модификатор (обычно Win/Logo)
