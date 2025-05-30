@@ -1,7 +1,7 @@
 #!/bin/bash
 # ======================================================
 # Улучшенная конфигурация Bash
-# Версия: 0.0.1
+# Версия: 0.0.2
 # Последнее обновление: 30.05.25
 # Автор: 1q2w3e4rf
 # GitHub: https://github.com/1q2w3e4rf/config_sway
@@ -116,18 +116,36 @@ fi
 
 # ============ УЛУЧШЕННЫЕ АЛИАСЫ LS =================
 # Современные аналоги стандартных команд
-alias ls='exa --group-directories-first'  # Улучшенный ls
-alias ll='exa -lh --group-directories-first --color=never --time-style=long-iso'
-alias la='exa -a --group-directories-first'
-alias lla='exa -lha --group-directories-first --color=never --time-style=long-iso'
+if command -v exa &>/dev/null; then
+    alias ls='exa --group-directories-first'  # Улучшенный ls
+    alias ll='exa -lh --group-directories-first --color=never --time-style=long-iso'
+    alias la='exa -a --group-directories-first'
+    alias lla='exa -lha --group-directories-first --color=never --time-style=long-iso'
+else
+    alias ls='ls --color=auto --group-directories-first'
+    alias ll='ls -lh --color=auto --group-directories-first'
+    alias la='ls -a --color=auto --group-directories-first'
+    alias lla='ls -lha --color=auto --group-directories-first'
+fi
 
 # ============ УМНЫЙ РЕДАКТОР =======================
-# Улучшенная функция edit с настройками для разных языков
+# Улучшенная функция edit с автоматическим sudo для системных файлов
 edit() {
-    # Проверяем поддержку подсветки синтаксиса
-    local syntax_hl=""
-    if command -v bat &>/dev/null; then
-        syntax_hl="--pager 'bat --color=always --style=numbers --language {}'"
+    local file="$1"
+    local needs_sudo=0
+    
+    # Проверяем, нужно ли sudo для редактирования файла
+    if [ -n "$file" ]; then
+        if [ ! -w "$file" ] && [ ! -w "$(dirname "$file")" ]; then
+            needs_sudo=1
+        fi
+        
+        # Если файл не существует, проверяем права на родительскую директорию
+        if [ ! -e "$file" ]; then
+            if [ ! -w "$(dirname "$file")" ]; then
+                needs_sudo=1
+            fi
+        fi
     fi
 
     # Выбираем лучший доступный редактор
@@ -140,22 +158,31 @@ edit() {
         editor="nano"
     fi
 
+    # Добавляем sudo если нужно
+    if [ $needs_sudo -eq 1 ]; then
+        editor="sudo $editor"
+    fi
+
     # Языко-специфичные настройки
-    case "$1" in
+    case "$file" in
         *.py)
             echo "Режим Python: используйте TAB для автодополнения"
-            $editor -c "set foldmethod=indent" -c "set number" "$1"
+            $editor -c "set foldmethod=indent" -c "set number" "$file"
             ;;
         *.java)
             echo "Режим Java: доступно автодополнение классов"
-            $editor -c "set syntax=java" -c "set number" "$1"
+            $editor -c "set syntax=java" -c "set number" "$file"
             ;;
         *.c|*.h|*.cpp)
             echo "Режим C/C++: включена подсветка синтаксиса"
-            $editor -c "set syntax=cpp" -c "set number" "$1"
+            $editor -c "set syntax=cpp" -c "set number" "$file"
             ;;
         *)
-            $editor "$1"
+            if [ -n "$file" ]; then
+                $editor "$file"
+            else
+                $editor
+            fi
             ;;
     esac
 }
@@ -221,11 +248,18 @@ hist() {
     fi
 }
 
-# Быстрое редактирование файла
+# Быстрое редактирование файла с автоматическим sudo
 vf() {
     local file
-    file=$(fzf --height 40% --reverse --preview 'bat --color=always --style=numbers {}')
-    [ -n "$file" ] && nvim "$file"
+    file=$(fzf --height 40% --reverse --preview 'bat --color=always --style=numbers {} 2>/dev/null || echo "Не удалось прочитать файл"')
+    
+    if [ -n "$file" ]; then
+        if [ -w "$file" ] || [ -w "$(dirname "$file")" ]; then
+            nvim "$file"
+        else
+            sudo nvim "$file"
+        fi
+    fi
 }
 
 # ========= НАСТРОЙКИ ИСТОРИИ =======================
@@ -253,3 +287,4 @@ echo -e "Начните вводить команду и нажмите \033[1;3
 echo -e "Используйте \033[1;33mhist\033[0m для поиска по истории команд"
 echo -e "Используйте \033[1;33mvf\033[0m для быстрого редактирования файлов"
 echo -e "Используйте \033[1;33mCtrl+R\033[0m для поиска по истории"
+echo -e "Используйте \033[1;33medit file\033[0m для редактирования файлов (автоматический sudo)"
