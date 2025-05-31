@@ -1,36 +1,99 @@
 #!/bin/bash
 # ======================================================
 # Улучшенная конфигурация Bash
-# Версия: 0.0.2
+# Версия: 0.0.8
 # Последнее обновление: 30.05.25
 # Автор: 1q2w3e4rf
 # GitHub: https://github.com/1q2w3e4rf/config_sway
 # ======================================================
 
+# ============ ИНФОРМАЦИЯ О СИСТЕМЕ ==================
+_system_info() {
+    echo -e "\n\033[1;34m╔════════════════════════════════════════╗"
+    echo -e "║             СИСТЕМНАЯ ИНФОРМАЦИЯ            ║"
+    echo -e "╚════════════════════════════════════════╝\033[0m"
+    
+    # Основная информация
+    echo -e "\n\033[1;32m● Основное:\033[0m"
+    echo -e "  \033[1;33m├─ Хост:\033[0m $(hostname 2>/dev/null || echo "неизвестно")"
+    echo -e "  \033[1;33m├─ Пользователь:\033[0m $(whoami)"
+    echo -e "  \033[1;33m└─ Оболочка:\033[0m $(basename "$SHELL")"
+    
+    # Информация об ОС
+    echo -e "\n\033[1;32m● Операционная система:\033[0m"
+    if [ -f /etc/os-release ]; then
+        source /etc/os-release
+        echo -e "  \033[1;33m├─ Дистрибутив:\033[0m ${PRETTY_NAME:-неизвестно}"
+        echo -e "  \033[1;33m└─ Версия:\033[0m ${VERSION_ID:-неизвестно}"
+    elif command -v lsb_release &>/dev/null; then
+        echo -e "  \033[1;33m└─ Дистрибутив:\033[0m $(lsb_release -ds 2>/dev/null)"
+    else
+        echo -e "  \033[1;33m└─ Дистрибутив:\033[0m неизвестно"
+    fi
+    
+    # Информация о ядре
+    echo -e "\n\033[1;32m● Ядро:\033[0m"
+    echo -e "  \033[1;33m├─ Версия:\033[0m $(uname -r 2>/dev/null)"
+    echo -e "  \033[1;33m└─ Архитектура:\033[0m $(uname -m 2>/dev/null)"
+    
+    # Аптайм и память
+    echo -e "\n\033[1;32m● Ресурсы:\033[0m"
+    echo -e "  \033[1;33m├─ Аптайм:\033[0m $(uptime -p 2>/dev/null | sed 's/up //' || echo "неизвестно")"
+    echo -e "  \033[1;33m├─ Память:\033[0m $(free -h 2>/dev/null | awk '/Mem/{print $3"/"$2}' || echo "неизвестно") (используется/всего)"
+    echo -e "  \033[1;33m└─ Загрузка CPU:\033[0m $(uptime 2>/dev/null | awk -F 'load average: ' '{print $2}' || echo "неизвестно")"
+    
+    # Диски
+    echo -e "\n\033[1;32m● Дисковое пространство:\033[0m"
+    df -h 2>/dev/null | grep -v "tmpfs" | awk '{printf "  \033[1;33m├─ %-15s %-10s %-10s %-10s\033[0m\n", $1, $3, $5, $6}' | head -n 4
+    df -h 2>/dev/null | grep -v "tmpfs" | awk 'NR>4 {printf "  \033[1;33m└─ %-15s %-10s %-10s %-10s\033[0m\n", $1, $3, $5, $6}' | tail -n 1
+    
+    # Сетевые интерфейсы
+    echo -e "\n\033[1;32m● Сетевые интерфейсы:\033[0m"
+    ip -o -4 addr show 2>/dev/null | awk '{print $2": "$4}' | while read -r line; do
+        echo -e "  \033[1;33m├─ $line\033[0m"
+    done | head -n 2
+    ip -o -4 addr show 2>/dev/null | awk '{print $2": "$4}' | while read -r line; do
+        echo -e "  \033[1;33m└─ $line\033[0m"
+    done | tail -n 1
+    
+    # Температура (если доступно)
+    if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
+        temp=$(($(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)/1000))
+        echo -e "\n\033[1;32m● Температура CPU:\033[0m \033[1;33m${temp:-неизвестно}°C\033[0m"
+    fi
+    
+    # Советы по использованию
+    echo -e "\n\033[1;34m╔════════════════════════════════════════╗"
+    echo -e "║             СОВЕТЫ ПО ИСПОЛЬЗОВАНИЮ          ║"
+    echo -e "╚════════════════════════════════════════╝\033[0m"
+    echo -e "  \033[1;33m• Начните вводить команду и нажмите Tab для выбора\033[0m"
+    echo -e "  \033[1;33m• Используйте hist для поиска по истории команд\033[0m"
+    echo -e "  \033[1;33m• Используйте vf для быстрого редактирования файлов\033[0m"
+    echo -e "  \033[1;33m• Используйте se <термин> для поиска в файлах\033[0m"
+    echo -e "  \033[1;33m• Используйте Ctrl+R для поиска по истории\033[0m"
+    echo -e "  \033[1;33m• Используйте edit file для редактирования (авто sudo)\033[0m"
+    echo -e "  \033[1;33m• Используйте update для обновления системы\033[0m"
+    echo -e "  \033[1;33m• Используйте cleanup для очистки системы\033[0m"
+}
+
+case $- in
+    *i*) _system_info ;;
+esac
+
 # ============ НАСТРОЙКА ПРИГЛАШЕНИЯ ==================
-# Цветное приглашение с индикатором статуса выполнения
 set_prompt() {
-    local EXIT="$?"  # Получаем статус последней команды
+    local EXIT="$?"
     local RED="\[\033[0;31m\]"
     local GREEN="\[\033[0;32m\]"
     local YELLOW="\[\033[0;33m\]"
-    local BLUE="\[\033[0;34m\]"
-    local PURPLE="\[\033[0;35m\]"
     local CYAN="\[\033[0;36m\]"
     local WHITE="\[\033[0;37m\]"
     local RESET="\[\033[0m\]"
 
-    # Формат приглашения: пользователь@хост путь
     PS1="\n${CYAN}\u${WHITE}@${YELLOW}\h ${GREEN}\w\n"
-    
-    # Разный цвет стрелки в зависимости от статуса
-    if [ $EXIT -eq 0 ]; then
-        PS1+="${GREEN}❯${RESET} "  # Зеленая стрелка при успехе
-    else
-        PS1+="${RED}❯${RESET} "    # Красная стрелка при ошибке
-    fi
+    [ $EXIT -eq 0 ] && PS1+="${GREEN}❯${RESET} " || PS1+="${RED}❯${RESET} "
 }
-PROMPT_COMMAND='set_prompt'  # Обновлять приглашение после каждой команды
+PROMPT_COMMAND='set_prompt'
 
 # ========== УМНОЕ АВТОДОПОЛНЕНИЕ ====================
 # Автодополнение на основе fzf для команд и истории
@@ -71,6 +134,8 @@ bind 'TAB:menu-complete'               # Циклическое переключ
 bind 'set show-all-if-ambiguous on'    # Показывать все варианты
 bind 'set menu-complete-display-prefix on'  # Показывать префикс
 bind 'set completion-ignore-case on'   # Игнорировать регистр
+bind '"\e[A": history-search-backward' # Поиск в истории стрелкой вверх
+bind '"\e[B": history-search-forward'  # Поиск в истории стрелкой вниз
 
 # ===== АВТОДОПОЛНЕНИЕ ДЛЯ КОНКРЕТНЫХ КОМАНД =========
 # Автодополнение для pacman/yay
@@ -129,22 +194,17 @@ else
 fi
 
 # ============ УМНЫЙ РЕДАКТОР =======================
-# Улучшенная функция edit с автоматическим sudo для системных файлов
+# Улучшенная функция edit с автоматическим sudo и поиском
 edit() {
     local file="$1"
+    local search_term="$2"
     local needs_sudo=0
     
     # Проверяем, нужно ли sudo для редактирования файла
     if [ -n "$file" ]; then
-        if [ ! -w "$file" ] && [ ! -w "$(dirname "$file")" ]; then
+        if { [ -e "$file" ] && [ ! -w "$file" ]; } || 
+           { [ ! -e "$file" ] && [ ! -w "$(dirname "$file")" ]; }; then
             needs_sudo=1
-        fi
-        
-        # Если файл не существует, проверяем права на родительскую директорию
-        if [ ! -e "$file" ]; then
-            if [ ! -w "$(dirname "$file")" ]; then
-                needs_sudo=1
-            fi
         fi
     fi
 
@@ -163,28 +223,53 @@ edit() {
         editor="sudo $editor"
     fi
 
+    # Подготовка команды с поиском (если указан термин)
+    local edit_cmd="$editor"
+    if [ -n "$search_term" ]; then
+        case "$editor" in
+            *nvim*) edit_cmd+=" -c \"/$search_term\"" ;;
+            *vim*)  edit_cmd+=" -c \"/$search_term\"" ;;
+            *nano*) edit_cmd+=" --afterends \"$search_term\"" ;;
+        esac
+    fi
+
     # Языко-специфичные настройки
     case "$file" in
         *.py)
             echo "Режим Python: используйте TAB для автодополнения"
-            $editor -c "set foldmethod=indent" -c "set number" "$file"
+            edit_cmd+=" -c \"set foldmethod=indent\" -c \"set number\""
             ;;
         *.java)
             echo "Режим Java: доступно автодополнение классов"
-            $editor -c "set syntax=java" -c "set number" "$file"
+            edit_cmd+=" -c \"set syntax=java\" -c \"set number\""
             ;;
         *.c|*.h|*.cpp)
             echo "Режим C/C++: включена подсветка синтаксиса"
-            $editor -c "set syntax=cpp" -c "set number" "$file"
+            edit_cmd+=" -c \"set syntax=cpp\" -c \"set number\""
             ;;
         *)
-            if [ -n "$file" ]; then
-                $editor "$file"
-            else
-                $editor
-            fi
+            [ -n "$file" ] && edit_cmd+=" -c \"set number\""
             ;;
     esac
+
+    # Добавляем файл и выполняем команду
+    [ -n "$file" ] && edit_cmd+=" \"$file\""
+    eval "$edit_cmd"
+}
+
+# ============ ПОИСК В ФАЙЛАХ ========================
+# Поиск с fzf и открытие в редакторе с подсветкой
+search_and_edit() {
+    local search_term=$1
+    if [ -z "$search_term" ]; then
+        echo "Использование: search_and_edit <термин>"
+        return 1
+    fi
+
+    local selected_file=$(grep -rl "$search_term" . 2>/dev/null | \
+        fzf --height 40% --reverse --preview "grep -n --color=always '$search_term' {}")
+    
+    [ -n "$selected_file" ] && edit "$selected_file" "$search_term"
 }
 
 # ============ ПОЛЕЗНЫЕ АЛИАСЫ ======================
@@ -212,6 +297,7 @@ alias c='clear'      # Очистка экрана
 alias h='tldr'       # Краткая справка по командам
 alias update='sudo pacman -Syu && yay -Syu'  # Обновление системы
 alias cleanup='sudo pacman -Rns $(pacman -Qtdq)'  # Очистка системы
+alias se='search_and_edit'  # Поиск в файлах
 
 # ============ ПОЛЕЗНЫЕ ФУНКЦИИ =====================
 # Создать директорию и перейти в нее
@@ -243,8 +329,12 @@ extract() {
 hist() {
     local cmd=$(history | fzf --height 40% --reverse --prompt="История команд: " | awk '{$1=""; print substr($0,2)}')
     if [ -n "$cmd" ]; then
-        echo "$cmd" | xclip -sel clip
-        echo "Команда скопирована в буфер: $cmd"
+        if command -v xclip &>/dev/null; then
+            echo "$cmd" | xclip -sel clip
+            echo "Команда скопирована в буфер: $cmd"
+        else
+            echo "Доступная команда: $cmd"
+        fi
     fi
 }
 
@@ -276,15 +366,5 @@ shopt -s globstar       # Рекурсивное сопоставление пу
 shopt -s dotglob        # Включать скрытые файлы в подстановки
 shopt -s nocaseglob     # Игнорировать регистр при подстановке
 
-# ============ ПРИВЕТСТВЕННОЕ СООБЩЕНИЕ =============
-echo -e "\n\033[1;34mИнформация о системе:\033[0m"
-echo -e "Имя хоста: \033[1;32m$(hostname)\033[0m"
-echo -e "Ядро: \033[1;32m$(uname -r)\033[0m"
-echo -e "Время работы: \033[1;32m$(uptime -p)\033[0m"
-echo -e "Оболочка: \033[1;32m$(basename $SHELL)\033[0m"
-echo -e "\n\033[1;34mСоветы по использованию:\033[0m"
-echo -e "Начните вводить команду и нажмите \033[1;33mTab\033[0m для выбора"
-echo -e "Используйте \033[1;33mhist\033[0m для поиска по истории команд"
-echo -e "Используйте \033[1;33mvf\033[0m для быстрого редактирования файлов"
-echo -e "Используйте \033[1;33mCtrl+R\033[0m для поиска по истории"
-echo -e "Используйте \033[1;33medit file\033[0m для редактирования файлов (автоматический sudo)"
+# ============ FZF НАСТРОЙКИ ========================
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
