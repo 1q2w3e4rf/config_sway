@@ -18,18 +18,19 @@ set $up k
 set $right l
 
 # Терминал по умолчанию
-set $term konsole
+set $term alacritty
 # Запуск приложений (лаунчер)
-set $menu dmenu_path | wmenu | xargs swaymsg exec --
+set $menu dmenu_path | rofi -show drun -display-drun "Apps" -show-icons | xargs swaymsg exec --
 # Браузер по умолчанию
 set $browser yandex-browser-stable
 # Файловый менеджер
 set $filemanager dolphin
-
+# Steam
+set $steam steam
 ### Настройки дисплея
 #
 # Обои рабочего стола (другие варианты в /usr/share/backgrounds/sway/)
-output * bg /путь/к/фото fill
+output * bg /home/rek/photo/1.jpg fill
 
 ### Настройки ввода
 #
@@ -65,6 +66,9 @@ input "type:pointer" accel_profile flat
 
     # Запуск файлового менеджера
     bindsym $mod+z exec $filemanager
+    
+    # Запуск Steam
+    bindsym $mod+v exec $steam
 
     # Закрыть текущее окно
     bindsym $mod+Shift+q kill
@@ -131,8 +135,8 @@ input "type:pointer" accel_profile flat
 
 # Управление окнами:
     # Разделение окон
-    bindsym $mod+b splith  # Горизонтально
-    bindsym $mod+v splitv  # Вертикально
+    bindsym $mod+g splith  # Горизонтально
+    bindsym $mod+t splitv  # Вертикально
 
     # Режимы расположения окон
     bindsym $mod+s layout stacking  # Стек

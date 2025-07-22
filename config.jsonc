@@ -1,243 +1,174 @@
 {
+    // Основные настройки
     "layer": "top",
     "position": "top",
-    "height": 30,
-    "modules-left": ["custom/menu", "sway/workspaces", "sway/window"],
-    "modules-center": ["custom/wf-recorder", "sway/mode"],
+    "height": 36,
+    "spacing": 8,
+    "margin-top": 6,
+    "margin-bottom": 0,
+    "margin-left": 12,
+    "margin-right": 12,
+    
+    // Модули
+    "modules-left": ["custom/launcher", "sway/workspaces"],
+    "modules-center": ["sway/window"],
     "modules-right": [
-        "custom/wlsunset",
-        "custom/playerctl",
-        "custom/scratchpad",
-        "idle_inhibitor",
-        "sway/language",
+        "custom/language",
+        "custom/media",
+        "network",
         "cpu",
         "memory",
-        "battery",
-        "network",
-        "bluetooth",
         "pulseaudio",
+        "custom/notification",
         "clock",
-        "custom/power",
-        "tray"
+        "custom/power"
     ],
-    
+
+    // Настройки рабочих пространств
     "sway/workspaces": {
-         "disable-scroll": true,
-         "all-outputs": true
+        "disable-scroll": true,
+        "all-outputs": true,
+        "format": "{icon}",
+        "format-icons": {
+            "1": "",  // Дом
+            "2": "",  // Браузер
+            "3": "",  // Код
+            "4": "",  // Музыка
+            "5": "",  // Графика
+            "urgent": "",
+            "focused": "",
+            "default": ""
+        },
+        "persistent_workspaces": {
+            "*": 5  // 5 рабочих пространств по умолчанию
+        }
     },
-    
-    "sway/language": {
-        "format": " {}",
-        "min-length": 5,
-        "tooltip": false,
-        "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
 
-    },
-
-    "custom/menu": {
-        "format": "",
-        "on-click": "exec alacritty",
-        "tooltip": false
-    },
-    
-    "sway/mode": {
-        "format": "<span style=\"italic\">{}</span>",
-        "tooltip": false
-    },
-    
+    // Активное окно
     "sway/window": {
         "format": "{}",
         "max-length": 50,
         "tooltip": true
     },
 
-    "idle_inhibitor": {
-        "format": "{icon}",
+    // Кнопка запуска
+    "custom/launcher": {
+        "format": "",  // Логотип Arch
+        "on-click": "rofi -show drun -theme slate",
+        "on-click-right": "rofi -show run -theme slate",
+        "tooltip": false
+    },
+
+    // Индикатор языка
+    "custom/language": {
+        "exec": "/etc/xdg/waybar/language.py",
+        "return-type": "json",
+        "interval": 1,
+        "on-click": "swaymsg input type:keyboard xkb_switch_layout next",
+        "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev"
+    },
+
+    // Медиаплеер
+    "custom/media": {
+        "exec": "/etc/xdg/waybar/mediaplayer.py",
+        "return-type": "json",
+        "format": "{icon}  {}",
         "format-icons": {
-            "activated": "",
-            "deactivated": ""
+            "spotify": "",
+            "default": ""
         },
-        "tooltip": true,
-        "tooltip-format-activated": "Caffeine on",
-        "tooltip-format-deactivated": "Caffein off"
+        "max-length": 40,
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl stop",
+        "escape": true
     },
 
-    "pulseaudio": {
-       "format": "{icon}  {volume}% {format_source}",
-       "format-bluetooth": "{icon} {volume}%",
-       "format-muted": " {format_source}",
-       "format-source": "  {volume}%",
-       "format-source-muted": "",
-       "format-icons": {
-           "headphone": "",
-           "headset": "",
-           "default": ["", "", ""]
-       },
-       "tooltip-format": "{icon}  {volume}% {format_source}",
-       "on-click": "swaymsg exec \\$pavucontrol",
-       "on-click-middle": "swaymsg exec \\$volume_mute",
-       "on-click-right": "swaymsg exec pavucontrol",
-       "on-scroll-up": "swaymsg exec \\$volume_up",
-       "on-scroll-down": "swaymsg exec \\$volume_down"
-       
-    },
-    
-    "battery": {
-        "format": "{icon} {capacity}%",
-        "format-icons": ["", "", "", "", ""]
-    },
-    
-    "network": {
-       "format-wifi": " ({signalStrength}%)",
-       "format-ethernet": "",
-       "format-disconnected": "",
-       "tooltip-format": "{ifname} ({essid}): {ipaddr}",
-       "on-click": "swaymsg exec \\$term nmtui"
-    },
-
-    "bluetooth": {
-        "format": "",
-        "format-disabled": "",
-        "on-click": "swaymsg exec \\$rofi_bluetooth",
-        "on-click-right": "rfkill toggle bluetooth",
-        "tooltip-format": "{}"
-    },
-    
+    // Часы
     "clock": {
-        "format": "{:%e %b %H:%M}",
-        "tooltip": true,
-        "tooltip-format": "{:%d.%m.%Y %H:%M}",
-        "interval": 5,
-        "on-click": "swaymsg exec \\$calendar"
+        "interval": 1,
+        "format": " <span>{:%H:%M}</span>",  // Часы с разделителем :
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "on-click": "gnome-calendar",
+        "timezone": "Europe/Moscow"
     },
-    
+
+    // Уведомления
+    "custom/notification": {
+        "exec": "/etc/xdg/waybar/notification.py",
+        "return-type": "json",
+        "interval": 1,
+        "format": "{icon} {}",
+        "format-icons": {
+            "notification": "",
+            "none": "",
+            "dnd": ""
+        },
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw"
+    },
+
+    // Кнопка питания
+    "custom/power": {
+        "format": "<span color='#f38ba8'></span>",  // Красная иконка
+        "on-click": "wlogout --protocol layer-shell",
+        "tooltip": false
+    },
+
+    // Сеть
+    "network": {
+        "interval": 5,
+        "format-wifi": "  {essid} ({signalStrength}%)",
+        "format-ethernet": "  Ethernet",
+        "format-disconnected": "  Disconnected",
+        "tooltip-format": "{ifname}\nIP: {ipaddr}\nStrength: {signalStrength}%",
+        "on-click": "nm-connection-editor"
+    },
+
+    // CPU
     "cpu": {
         "interval": 5,
-        "format": " {usage}%",
+        "format": "  {usage}%",
         "states": {
-          "warning": 70,
-          "critical": 90
-          },
-    "on-click": "htop"
+            "warning": 70,
+            "critical": 90
+        },
+        "on-click": "kitty htop"
     },
-    
+
+    // Память
     "memory": {
-        "interval": 30,
-        "format": " {}%",
+        "interval": 5,
+        "format": "  {percentage}%",
         "states": {
-          "warning": 70,
-          "critical": 90
+            "warning": 70,
+            "critical": 90
         },
-    "on-click": "htop"
-    
-    },
-    "custom/wf-recorder": {
-         "interval": "once",
-         "return-type": "json",
-         "format": "{}",
-         "tooltip-format": "{tooltip}",
-         "exec": "echo '{\"class\": \"recording\",\"text\":\"\",\"tooltip\":\"press $mod+Esc to stop recording\"}'",
-         "exec-if": "pgrep wf-recorder",
-         "on-click": "killall -s SIGINT wf-recorder",
-         "signal": 8
+        "tooltip-format": "Memory: {used:0.1f}G/{total:0.1f}G",
+        "on-click": "kitty htop"
     },
 
-    "custom/playerctl": {
-        "interval": "once",
-        "tooltip": true,
-        "return-type": "json",
-        "format": "{icon}",
+    // Аудио
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "format-bluetooth": " {icon}  {volume}%",
+        "format-muted": "  Muted",
         "format-icons": {
-            "Playing": "",
-            "Paused": ""
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
         },
-        "exec": "playerctl metadata --format '{\"alt\": \"{{status}}\", \"tooltip\": \"{{playerName}}:  {{markup_escape(title)}} - {{markup_escape(artist)}}\" }'",
-        "on-click": "playerctl play-pause; pkill -RTMIN+5 waybar",
-        "on-click-right": "playerctl next; pkill -RTMIN+5 waybar",
-        "on-scroll-up": "playerctl position 10+; pkill -RTMIN+5 waybar",
-        "on-scroll-down": "playerctl position 10-; pkill -RTMIN+5 waybar",
-        "signal": 5
+        "scroll-step": 5,
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
     },
 
-    "custom/power": {
-        "format": "",
-        "on-click": "nwg-bar -x"
-    },
-
-    "custom/dnd": {
-        "interval": "once",
-        "return-type": "json",
-        "format": "{}{icon}",
-        "format-icons": {
-            "default": "",
-            "dnd": ""
-        },
-        "on-click": "makoctl mode | grep 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
-        "exec": "printf '{\"alt\":\"%s\",\"tooltip\":\"Notification mode: %s\"}' $(makoctl mode | grep -q 'do-not-disturb' && echo dnd || echo default) $(makoctl mode | tail -1)",
-        "signal": 11
-    },
-    
-    "custom/weather": {
-        "icon-size": 42,
-        "format": "{icon} {}",
-        "tooltip": true,
-        "interval": 3600,
-        "exec": "/home/platon/.config/sway/scripts/weather.py",
-        "return-type": "json",
-        "format-icons": {
-           "Unknown": "✨",
-           "Cloudy": "",
-           "Fog": "🌫",
-           "HeavyRain": "🌧",
-           "HeavyShowers": "🌧",
-           "HeavySnow": "❄️",
-           "HeavySnowShowers": "❄️",
-           "LightRain": "🌦",
-           "LightShowers": "🌦",
-           "LightSleet": "🌧",
-           "LightSleetShowers": "🌧",
-           "LightSnow": "🌨",
-           "LightSnowShowers": "🌨",
-           "PartlyCloudy": "⛅️",
-           "Sunny": "☀️",
-           "ThunderyHeavyRain": "🌩",
-           "ThunderyShowers": "⛈",
-           "ThunderySnowShowers": "⛈",
-           "VeryCloudy": ""
-        }
-    },
-
-    "custom/wlsunset": {
-        "interval": "once",
-        "tooltip": true,
-        "tooltip-format": "{tooltip}",
-        "return-type": "json",
-        "format": "{icon}",
-        "format-icons": {
-            "on": "",
-            "off": ""
-        },
-        "exec": "fallback_latitude=50.1 fallback_longitude=8.7 latitude= longitude= /usr/share/sway/scripts/sunset.sh",
-        "on-click": "/usr/share/sway/scripts/sunset.sh toggle; pkill -RTMIN+6 waybar",
-        "exec-if": "/usr/share/sway/scripts/sunset.sh check",
-        "signal": 6
-    },
-
-    "custom/scratchpad": {
-        "interval": "once",
-        "return-type": "json",
-        "format": "{icon}",
-        "format-icons": {
-            "one": "",
-            "many": ""
-        },
-        "exec": "/home/platon/.config/sway/scripts/scratchpad.sh; pkill -RTMIN+7 waybar",
-        "on-click": "swaymsg 'scratchpad show'",
-        "signal": 7
-    },
-    
+    // Дополнительные настройки
     "tray": {
-        "icon-size": 21,
-        "spacing": 10
+        "icon-size": 18,
+        "spacing": 8
     }
 }
