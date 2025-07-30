@@ -20,9 +20,9 @@ set $right l
 # Терминал по умолчанию
 set $term alacritty
 # Запуск приложений (лаунчер)
-set $menu dmenu_path | rofi -show drun -display-drun "Apps" -show-icons | xargs swaymsg exec --
+set $menu exec wmenu
 # Браузер по умолчанию
-set $browser yandex-browser-stable
+set $browser firefox-beta-bin
 # Файловый менеджер
 set $filemanager dolphin
 # Steam
@@ -74,7 +74,7 @@ input "type:pointer" accel_profile flat
     bindsym $mod+Shift+q kill
 
     # Открыть лаунчер приложений
-    bindsym $mod+d exec $menu
+    bindsym $mod+d exec rofi -show drun -config ~/.config/rofi/config.rasi
 
     # Режим перемещения/изменения размеров окон
     floating_modifier $mod normal
@@ -84,6 +84,9 @@ input "type:pointer" accel_profile flat
 
     # Выход из Sway
     bindsym $mod+Shift+e exec swaynag -t warning -m 'Вы нажали комбинацию для выхода. Завершить сеанс Sway?' -B 'Да, выйти' 'swaymsg exit'
+
+    # Win + R для исправления выделенного текста
+    bindsym --release Mod4+r exec ~/.local/bin/fix_text.sh
 
 # Навигация:
     # Перемещение фокуса

@@ -14,8 +14,9 @@
     "modules-center": ["sway/window"],
     "modules-right": [
         "custom/language",
+	"network",
         "custom/media",
-        "network",
+        "custom/weather",
         "cpu",
         "memory",
         "pulseaudio",
@@ -40,8 +41,22 @@
             "default": ""
         },
         "persistent_workspaces": {
-            "*": 5  // 5 рабочих пространств по умолчанию
+            "*": 5
         }
+    },
+    
+    "network": {
+        "format": "🌐",
+        "format-ethernet": "🔌 {bandwidthDownBits}",
+        "format-wifi": "📶 {bandwidthDownBits}",
+        "format-disconnected": "⚠️ Offline",
+        "tooltip": true,
+        "tooltip-format": "▸ {ifname}\n▸ IP: {ipaddr}\n▸ Down: {bandwidthDownBits}/s\n▸ Up: {bandwidthUpBits}/s\n▸ MAC: {macaddr}",
+        "interval": 3,
+        "exec": "NET_DEV=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $5}'); [ -z \"$NET_DEV\" ] && NET_DEV=$(ip link show | awk -F': ' '/state UP/ {print $2; exit}'); SPEED=$(ip -json link show dev $NET_DEV 2>/dev/null | jq -r '.[0].speed'); echo \"{\\\"ifname\\\":\\\"$NET_DEV\\\",\\\"ipaddr\\\":\\\"$(ip -json addr show dev $NET_DEV 2>/dev/null | jq -r '.[0].addr_info[] | select(.family == \"inet\") | .local')\\\",\\\"bandwidthDownBits\\\":\\\"$(($SPEED*1000000))bps\\\",\\\"bandwidthUpBits\\\":\\\"$(($SPEED*1000000))bps\\\",\\\"macaddr\\\":\\\"$(ip -json link show dev $NET_DEV | jq -r '.[0].address')\\\"}\"",
+        "return-type": "json",
+        "on-click": "nmtui-connect",
+        "on-click-right": "alacritty -e bmon"
     },
 
     // Активное окно
@@ -53,7 +68,7 @@
 
     // Кнопка запуска
     "custom/launcher": {
-        "format": "",  // Логотип Arch
+        "format": "",
         "on-click": "rofi -show drun -theme slate",
         "on-click-right": "rofi -show run -theme slate",
         "tooltip": false
@@ -66,6 +81,16 @@
         "interval": 1,
         "on-click": "swaymsg input type:keyboard xkb_switch_layout next",
         "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev"
+    },
+
+    // Модуль погоды
+    "custom/weather": {
+        "exec": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w' | sed 's/+//g'",
+        "interval": 3600,
+        "format": "🌦️",
+        "tooltip-format": "Погода в Вязниках:\n{}\n\nНажмите для подробностей",
+        "exec-on-event": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w\\n%D\\n%h\\n%p'",
+        "on-click": "xdg-open 'https://wttr.in/Vyazniki'"
     },
 
     // Медиаплеер
@@ -86,7 +111,7 @@
     // Часы
     "clock": {
         "interval": 1,
-        "format": " <span>{:%H:%M}</span>",  // Часы с разделителем :
+        "format": " <span>{:%H:%M}</span>",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
         "on-click": "gnome-calendar",
         "timezone": "Europe/Moscow"
@@ -109,19 +134,9 @@
 
     // Кнопка питания
     "custom/power": {
-        "format": "<span color='#f38ba8'></span>",  // Красная иконка
+        "format": "<span color='#f38ba8'> </span>",
         "on-click": "wlogout --protocol layer-shell",
         "tooltip": false
-    },
-
-    // Сеть
-    "network": {
-        "interval": 5,
-        "format-wifi": "  {essid} ({signalStrength}%)",
-        "format-ethernet": "  Ethernet",
-        "format-disconnected": "  Disconnected",
-        "tooltip-format": "{ifname}\nIP: {ipaddr}\nStrength: {signalStrength}%",
-        "on-click": "nm-connection-editor"
     },
 
     // CPU

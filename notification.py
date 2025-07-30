@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# /etc/xdg/waybar/
 import json
 import subprocess
 
