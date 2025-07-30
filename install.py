@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 import os
 import subprocess
@@ -6,16 +5,19 @@ import shutil
 import sys
 from pathlib import Path
 
-# Конфигурация
+# Получаем имя текущего пользователя
 USER = os.getenv('USER')
 HOME = Path.home()
-CONFIG_DIR = HOME / '.config'
-SWAY_CONFIG = CONFIG_DIR / 'sway'
-WAYBAR_CONFIG = CONFIG_DIR / 'waybar'
-FONT_DIR = HOME / '.local' / 'share' / 'fonts'
-FONTCONFIG_DIR = HOME / '.config' / 'fontconfig'
 
-# Цвета для вывода
+# Пути для конфигурации
+CONFIG_PATHS = {
+    'sway_config': HOME / '.config' / 'sway' / 'config',
+    'waybar_dir': HOME / '.config' / 'waybar',
+    'photo_dir': HOME / 'photo',
+    'scripts_dir': HOME / 'Scripts',
+    'service_file': Path('/etc/systemd/system/filesorter.service')
+}
+
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -38,105 +40,117 @@ def run_cmd(cmd, sudo=False):
         print(f"{Colors.FAIL}Ошибка при выполнении: {cmd}{Colors.ENDC}")
         return False
 
-def install_packages():
-    """Установка необходимых пакетов"""
-    print(f"{Colors.HEADER}Установка основных пакетов...{Colors.ENDC}")
-    packages = [
-        'sway', 'waybar', 'alacritty', 'rofi', 'grim', 'slurp',
-        'pavucontrol', 'playerctl', 'light', 'swaylock', 'swayidle',
-        'swaync', 'networkmanager', 'bluez', 'blueman',
-        'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji',
-        'python-pip', 'python-i3ipc', 'polkit-gnome'
+def create_dirs():
+    """Создание всех необходимых директорий"""
+    print(f"{Colors.HEADER}Создание директорий...{Colors.ENDC}")
+    
+    dirs_to_create = [
+        HOME / '.config' / 'sway',
+        CONFIG_PATHS['waybar_dir'],
+        CONFIG_PATHS['photo_dir'],
+        CONFIG_PATHS['scripts_dir']
     ]
     
-    if not run_cmd(f"pacman -S --needed --noconfirm {' '.join(packages)}", sudo=True):
+    for directory in dirs_to_create:
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            print(f"{Colors.OKBLUE}Создана директория: {directory}{Colors.ENDC}")
+        except Exception as e:
+            print(f"{Colors.FAIL}Ошибка при создании {directory}: {e}{Colors.ENDC}")
+            sys.exit(1)
+
+def copy_files():
+    """Копирование всех необходимых файлов"""
+    print(f"{Colors.HEADER}Копирование файлов...{Colors.ENDC}")
+    
+    # Предполагаем, что скрипт запускается из директории с файлами
+    current_dir = Path(__file__).parent
+    
+    try:
+        # Sway config
+        shutil.copy('config', CONFIG_PATHS['sway_config'])
+        print(f"{Colors.OKBLUE}Скопирован sway config{Colors.ENDC}")
+        
+        # Waybar configs
+        shutil.copy('config.jsonc', CONFIG_PATHS['waybar_dir'] / 'config.jsonc')
+        shutil.copy('style.css', CONFIG_PATHS['waybar_dir'] / 'style.css')
+        print(f"{Colors.OKBLUE}Скопированы waybar configs{Colors.ENDC}")
+        
+        # Скрипты для waybar (кроме 1.py)
+        for script in current_dir.glob('*.py'):
+            if script.name != '1.py':
+                shutil.copy(script, CONFIG_PATHS['waybar_dir'])
+                # Даем права на выполнение
+                os.chmod(CONFIG_PATHS['waybar_dir'] / script.name, 0o755)
+        print(f"{Colors.OKBLUE}Скопированы скрипты для waybar{Colors.ENDC}")
+        
+        # Фото
+        shutil.copy('1.jpg', CONFIG_PATHS['photo_dir'] / '1.jpg')
+        print(f"{Colors.OKBLUE}Скопировано фото{Colors.ENDC}")
+        
+        # Скрипт 1.py в Scripts
+        shutil.copy('1.py', CONFIG_PATHS['scripts_dir'] / '1.py')
+        os.chmod(CONFIG_PATHS['scripts_dir'] / '1.py', 0o755)
+        print(f"{Colors.OKBLUE}Скопирован 1.py в Scripts{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}Ошибка при копировании файлов: {e}{Colors.ENDC}")
         sys.exit(1)
 
-def install_fonts():
-    """Установка дополнительных шрифтов"""
-    print(f"{Colors.HEADER}Установка шрифтов...{Colors.ENDC}")
-    os.makedirs(FONT_DIR, exist_ok=True)
+def create_service():
+    """Создание и активация systemd сервиса"""
+    print(f"{Colors.HEADER}Создание systemd сервиса...{Colors.ENDC}")
     
-    # Скачивание шрифтов
-    fonts = [
-        "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip",
-        "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf"
-    ]
-    
-    for font in fonts:
-        run_cmd(f"wget -P {FONT_DIR} {font}")
-    
-    # Распаковка архивов
-    for font_file in FONT_DIR.glob('*.zip'):
-        run_cmd(f"unzip -o {font_file} -d {FONT_DIR}")
-        os.remove(font_file)
-    
-    # Обновление кэша шрифтов
-    run_cmd("fc-cache -fv")
+    service_content = f"""[Unit]
+Description=File Sorter Service
+After=network.target
 
-def copy_configs():
-    """Копирование конфигурационных файлов"""
-    print(f"{Colors.HEADER}Копирование конфигураций...{Colors.ENDC}")
-    
-    # Создание резервных копий существующих конфигов
-    for config in [SWAY_CONFIG, WAYBAR_CONFIG]:
-        if config.exists():
-            backup = f"{config}.bak"
-            print(f"{Colors.WARNING}Создание резервной копии {config} в {backup}{Colors.ENDC}")
-            shutil.move(config, backup)
-    
-    # Копирование новых конфигов
-    shutil.copytree('config', SWAY_CONFIG)
-    shutil.copytree('waybar', WAYBAR_CONFIG)
-    
-    # Установка прав
-    for script in (SWAY_CONFIG / 'scripts').glob('*.py'):
-        script.chmod(0o755)
+[Service]
+Type=simple
+User={USER}
+ExecStart=/usr/bin/python3 {CONFIG_PATHS['scripts_dir']}/1.py
+Restart=always
+RestartSec=5
 
-def setup_services():
-    """Настройка сервисов автозагрузки"""
-    print(f"{Colors.HEADER}Настройка сервисов...{Colors.ENDC}")
+[Install]
+WantedBy=multi-user.target
+"""
     
-    # Polkit agent для прав sudo
-    autostart_dir = CONFIG_DIR / 'autostart'
-    os.makedirs(autostart_dir, exist_ok=True)
-    
-    with open(autostart_dir / 'polkit.desktop', 'w') as f:
-        f.write("""[Desktop Entry]
-Name=Polkit Agent
-Exec=/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-Type=Application
-""")
-
-def final_steps():
-    """Завершающие шаги установки"""
-    print(f"\n{Colors.OKGREEN}Установка завершена успешно!{Colors.ENDC}")
-    print(f"\n{Colors.BOLD}Что делать дальше:{Colors.ENDC}")
-    print("1. Добавьте строку в ~/.bash_profile или ~/.zprofile:")
-    print(f"   {Colors.OKBLUE}export XDG_CURRENT_DESKTOP=sway{Colors.ENDC}")
-    print("2. Для входа в Sway выполните:")
-    print(f"   {Colors.OKBLUE}sway{Colors.ENDC}")
-    print("3. Или настройте вход через display manager")
+    try:
+        with open(CONFIG_PATHS['service_file'], 'w') as f:
+            f.write(service_content)
+        
+        run_cmd('systemctl daemon-reload', sudo=True)
+        run_cmd('systemctl enable filesorter.service', sudo=True)
+        run_cmd('systemctl start filesorter.service', sudo=True)
+        
+        print(f"{Colors.OKGREEN}Сервис успешно создан и активирован{Colors.ENDC}")
+    except Exception as e:
+        print(f"{Colors.FAIL}Ошибка при создании сервиса: {e}{Colors.ENDC}")
+        sys.exit(1)
 
 def main():
-    print(f"{Colors.HEADER}{Colors.BOLD}Начало автоматической установки Sway WM{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}Начало автоматической настройки{Colors.ENDC}")
     
-    # Проверка на Arch Linux
-    if not Path('/etc/arch-release').exists():
-        print(f"{Colors.FAIL}Ошибка: Этот скрипт работает только на Arch Linux!{Colors.ENDC}")
-        sys.exit(1)
-    
-    # Проверка прав root
+    # Проверка на root
     if os.geteuid() == 0:
         print(f"{Colors.FAIL}Ошибка: Не запускайте скрипт от root!{Colors.ENDC}")
         sys.exit(1)
     
-    # Основные шаги установки
-    install_packages()
-    install_fonts()
-    copy_configs()
-    setup_services()
-    final_steps()
+    # Основные шаги
+    create_dirs()
+    copy_files()
+    create_service()
+    
+    print(f"\n{Colors.OKGREEN}{Colors.BOLD}Настройка успешно завершена!{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}Что сделано:{Colors.ENDC}")
+    print(f"- Созданы все необходимые директории")
+    print(f"- Скопированы конфиги Sway и Waybar")
+    print(f"- Скопированы все скрипты (включая 1.py в ~/Scripts)")
+    print(f"- Создан и активирован systemd сервис для 1.py")
+    print(f"\n{Colors.BOLD}Сервис можно проверить командами:{Colors.ENDC}")
+    print(f"  systemctl status filesorter.service")
+    print(f"  journalctl -u filesorter.service -f")
 
 if __name__ == "__main__":
     main()
