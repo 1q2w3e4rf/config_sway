@@ -75,9 +75,6 @@ yay -S ttf-nerd-fonts-symbols
    ```bash
    exec waybar
    ```
-3. **Дайте права на скрипты**
-
----
 
 ## **🎛 Настройка Waybar**
 
@@ -99,7 +96,7 @@ yay -S ttf-nerd-fonts-symbols
 1. **Изменить город для погоды**:
    В `~/.config/waybar/config` замените:
    ```json
-   "exec": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w'"
+   "exec": "curl -s 'wttr.in/Moscow?format=%c+%t+%w'"
    ```
    на свой город (например, `Moscow`).
 
