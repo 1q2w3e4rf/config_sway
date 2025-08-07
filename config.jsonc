@@ -69,8 +69,8 @@
     // Кнопка запуска
     "custom/launcher": {
         "format": "",
-        "on-click": "rofi -show drun -theme slate",
-        "on-click-right": "rofi -show run -theme slate",
+        "on-click": "rofi -show drun -config ~/.config/rofi/config.rasi",
+        "on-click-right": "rofi -show run -config ~/.config/rofi/config.rasi",
         "tooltip": false
     },
 
@@ -187,3 +187,4 @@
         "spacing": 8
     }
 }
+
