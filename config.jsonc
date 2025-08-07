@@ -89,7 +89,7 @@
         "interval": 3600,
         "format": "🌦️",
         "tooltip-format": "Погода в Вязниках:\n{}\n\nНажмите для подробностей",
-        "exec-on-event": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w\\n%D\\n%h\\n%p'",
+        "exec-on-event": "curl -s 'wttr.in/Moscow?format=%c+%t+%w\\n%D\\n%h\\n%p'",
         "on-click": "xdg-open 'https://wttr.in/Vyazniki'"
     },
 
