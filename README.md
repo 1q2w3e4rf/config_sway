@@ -65,16 +65,6 @@ sudo pacman -S sway waybar rofi alacritty grim slurp wlogout playerctl pamixer p
 yay -S ttf-nerd-fonts-symbols
 ```
 
----
-
-### **📥 Клонирование репозитория**
-```bash
-git clone https://github.com/yourusername/config_sway.git ~/.config/sway
-git clone https://github.com/yourusername/waybar-config.git ~/.config/waybar
-```
-
----
-
 ### **⚙️ Настройка окружения**
 1. **Проверьте, что Sway запускается**:
    ```bash
@@ -85,11 +75,7 @@ git clone https://github.com/yourusername/waybar-config.git ~/.config/waybar
    ```bash
    exec waybar
    ```
-3. **Дайте права на скрипты**:
-   ```bash
-   chmod +x ~/.config/sway/scripts/*
-   chmod +x ~/.config/waybar/modules/*
-   ```
+3. **Дайте права на скрипты**
 
 ---
 
