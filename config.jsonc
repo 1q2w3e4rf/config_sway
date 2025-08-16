@@ -13,8 +13,9 @@
     "modules-left": ["custom/launcher", "sway/workspaces"],
     "modules-center": ["sway/window"],
     "modules-right": [
+        "custom/vpn",
         "custom/language",
-	"network",
+        "network",
         "custom/media",
         "custom/weather",
         "cpu",
@@ -31,11 +32,11 @@
         "all-outputs": true,
         "format": "{icon}",
         "format-icons": {
-            "1": "",  // Дом
-            "2": "",  // Браузер
-            "3": "",  // Код
-            "4": "",  // Музыка
-            "5": "",  // Графика
+            "1": "",
+            "2": "",
+            "3": "",
+            "4": "",
+            "5": "",
             "urgent": "",
             "focused": "",
             "default": ""
@@ -44,37 +45,44 @@
             "*": 5
         }
     },
-    
+    // VPN
+    "custom/vpn": {
+        "exec": "if systemctl is-active --quiet wg-quick@wg0; then echo '{\"text\":\"VPN\", \"tooltip\":\"VPN активен\", \"class\":\"active\"}'; else echo '{\"text\":\"VPN\", \"tooltip\":\"VPN выключен\", \"class\":\"inactive\"}'; fi",
+        "exec-if": "which wg-quick",
+        "return-type": "json",
+        "interval": 5,
+        "format": "🌍",
+        "on-click": "if systemctl is-active --quiet wg-quick@wg0; then sudo systemctl stop wg-quick@wg0; else sudo systemctl start wg-quick@wg0; fi",
+        "on-click-right": "alacritty -e sudo wg show"
+    },
+    // Модуль сети
     "network": {
         "format": "🌐",
         "format-ethernet": "🔌 {bandwidthDownBits}",
         "format-wifi": "📶 {bandwidthDownBits}",
         "format-disconnected": "⚠️ Offline",
         "tooltip": true,
-        "tooltip-format": "▸ {ifname}\n▸ IP: {ipaddr}\n▸ Down: {bandwidthDownBits}/s\n▸ Up: {bandwidthUpBits}/s\n▸ MAC: {macaddr}",
+        "tooltip-format": "▸ {ifname}\n▸ IP: {ipaddr}\n▸ MAC: {macaddr}",
         "interval": 3,
-        "exec": "NET_DEV=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $5}'); [ -z \"$NET_DEV\" ] && NET_DEV=$(ip link show | awk -F': ' '/state UP/ {print $2; exit}'); SPEED=$(ip -json link show dev $NET_DEV 2>/dev/null | jq -r '.[0].speed'); echo \"{\\\"ifname\\\":\\\"$NET_DEV\\\",\\\"ipaddr\\\":\\\"$(ip -json addr show dev $NET_DEV 2>/dev/null | jq -r '.[0].addr_info[] | select(.family == \"inet\") | .local')\\\",\\\"bandwidthDownBits\\\":\\\"$(($SPEED*1000000))bps\\\",\\\"bandwidthUpBits\\\":\\\"$(($SPEED*1000000))bps\\\",\\\"macaddr\\\":\\\"$(ip -json link show dev $NET_DEV | jq -r '.[0].address')\\\"}\"",
+        "exec": "NET_DEV=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $5}'); [ -z \"$NET_DEV\" ] && NET_DEV=$(ip link show | awk -F': ' '/state UP/ {print $2; exit}'); echo \"{\\\"ifname\\\":\\\"$NET_DEV\\\",\\\"ipaddr\\\":\\\"$(ip -o -4 addr show $NET_DEV | awk '{print $4}' | cut -d'/' -f1)\\\",\\\"macaddr\\\":\\\"$(ip link show $NET_DEV | awk '/ether/ {print $2}')\\\"}\"",
         "return-type": "json",
         "on-click": "nmtui-connect",
         "on-click-right": "alacritty -e bmon"
     },
-
-    // Активное окно
+    // Остальные модули...
     "sway/window": {
         "format": "{}",
         "max-length": 50,
         "tooltip": true
     },
 
-    // Кнопка запуска
     "custom/launcher": {
-        "format": "",
+        "format": "🗽",
         "on-click": "rofi -show drun -config ~/.config/rofi/config.rasi",
         "on-click-right": "rofi -show run -config ~/.config/rofi/config.rasi",
         "tooltip": false
     },
 
-    // Индикатор языка
     "custom/language": {
         "exec": "/etc/xdg/waybar/language.py",
         "return-type": "json",
@@ -83,17 +91,15 @@
         "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev"
     },
 
-    // Модуль погоды
     "custom/weather": {
         "exec": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w' | sed 's/+//g'",
         "interval": 3600,
         "format": "🌦️",
         "tooltip-format": "Погода в Вязниках:\n{}\n\nНажмите для подробностей",
-        "exec-on-event": "curl -s 'wttr.in/Moscow?format=%c+%t+%w\\n%D\\n%h\\n%p'",
+        "exec-on-event": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w\\n%D\\n%h\\n%p'",
         "on-click": "xdg-open 'https://wttr.in/Vyazniki'"
     },
 
-    // Медиаплеер
     "custom/media": {
         "exec": "/etc/xdg/waybar/mediaplayer.py",
         "return-type": "json",
@@ -108,7 +114,6 @@
         "escape": true
     },
 
-    // Часы
     "clock": {
         "interval": 1,
         "format": " <span>{:%H:%M}</span>",
@@ -117,7 +122,6 @@
         "timezone": "Europe/Moscow"
     },
 
-    // Уведомления
     "custom/notification": {
         "exec": "/etc/xdg/waybar/notification.py",
         "return-type": "json",
@@ -132,14 +136,12 @@
         "on-click-right": "swaync-client -d -sw"
     },
 
-    // Кнопка питания
     "custom/power": {
         "format": "<span color='#f38ba8'> </span>",
         "on-click": "wlogout --protocol layer-shell",
         "tooltip": false
     },
 
-    // CPU
     "cpu": {
         "interval": 5,
         "format": "  {usage}%",
@@ -150,7 +152,6 @@
         "on-click": "kitty htop"
     },
 
-    // Память
     "memory": {
         "interval": 5,
         "format": "  {percentage}%",
@@ -162,7 +163,6 @@
         "on-click": "kitty htop"
     },
 
-    // Аудио
     "pulseaudio": {
         "format": "{icon}  {volume}%",
         "format-bluetooth": " {icon}  {volume}%",
@@ -181,10 +181,8 @@
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
     },
 
-    // Дополнительные настройки
     "tray": {
         "icon-size": 18,
         "spacing": 8
     }
 }
-
