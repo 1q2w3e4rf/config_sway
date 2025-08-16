@@ -1,7 +1,7 @@
 #!.config/seay/config
 # ======================================================
 # Config для sway
-# Версия: 0.0.1
+# Версия: 0.0.9
 # Последнее обновление: 30.05.25
 # Автор: 1q2w3e4rf
 # GitHub: https://github.com/1q2w3e4rf/config_sway
@@ -27,7 +27,10 @@ set $browser firefox-beta-bin
 set $filemanager dolphin
 # Steam
 set $steam steam
-### Настройки дисплея
+# Настройки курсора
+seat * xcursor_theme Bibata-Modern-Ice 24 
+seat * hide_cursor 5000
+### Настройки ввода
 #
 # Обои рабочего стола (другие варианты в /usr/share/backgrounds/sway/)
 output * bg /home/rek/photo/1.jpg fill
@@ -51,6 +54,16 @@ input * {
 # Скриншоты:
 bindsym Print exec grim ~/screenshots/-"$(date +%s)".png
 bindsym $mod+Print exec grim -g "$(slurp)" ~/screenshots/-"$(date +%s)".png
+
+# Скринкаст (запись экрана)
+set $screencast_dir ~/screenshots
+bindsym Mod1+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill -x wf-recorder; notify-send "Скринкаст остановлен"; else mkdir -p $screencast_dir && wf-recorder -g "$(slurp)" -f "$screencast_dir/recording_$(date +%Y%m%d_%H%M%S).mp4" && notify-send "Скринкаст запущен (область)"; fi'
+bindsym Mod1+$mod+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill -x wf-recorder; notify-send "Скринкаст остановлен"; else mkdir -p $screencast_dir && wf-recorder -f "$screencast_dir/recording_$(date +%Y%m%d_%H%M%S).mp4" && notify-send "Скринкаст запущен (весь экран)"; fi'
+
+# Звук
+bindsym F5 exec amixer -D pulse sset Master 5%-
+bindsym F6 exec amixer -D pulse sset Master 5%+
+bindsym F7 exec amixer -D pulse sset Master toggle
 
 # Отключение ускорения мыши
 input "type:pointer" accel_profile flat
@@ -85,8 +98,9 @@ input "type:pointer" accel_profile flat
     # Выход из Sway
     bindsym $mod+Shift+e exec swaynag -t warning -m 'Вы нажали комбинацию для выхода. Завершить сеанс Sway?' -B 'Да, выйти' 'swaymsg exit'
 
-    # Win + R для исправления выделенного текста
-    bindsym --release Mod4+r exec ~/.local/bin/fix_text.sh
+    bindsym Mod1+F4 exec systemctl poweroff
+    
+    bindsym Mod1+F3 exec systemctl reboot
 
 # Навигация:
     # Перемещение фокуса
@@ -208,6 +222,8 @@ bindsym $mod+r mode "resize"
 bar {
     swaybar_command waybar
 }
+
+
 
 # Подключение дополнительных конфигов
 include /etc/sway/config.d/*
