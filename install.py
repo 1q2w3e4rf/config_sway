@@ -21,26 +21,88 @@ CONFIG_PATHS = {
     'sway_config': HOME / '.config' / 'sway' / 'config',
     'waybar_config': HOME / '.config' / 'waybar' / 'config.jsonc',
     'waybar_style': HOME / '.config' / 'waybar' / 'style.css',
-    'waybar_scripts': HOME / '.config' / 'waybar',
+    'waybar_scripts': HOME / '.config' / 'waybar' / 'scripts',
+    'rofi_config': HOME / '.config' / 'rofi' / 'config.rasi',
+    'rofi_theme': HOME / '.config' / 'rofi' / 'theme.rasi',
+    'wlogout_config': HOME / '.config' / 'wlogout' / 'layout',
+    'swaync_config': HOME / '.config' / 'swaync' / 'config.json',
+    'swaync_style': HOME / '.config' / 'swaync' / 'style.css',
     'photo': HOME / 'photo' / '1.jpg',
-    'scripts_dir': HOME / 'Scripts',
-    'service_file': Path('/etc/systemd/system/filesorter.service'),
+    'scripts_dir': HOME / '.local' / 'bin',
     'fonts_dir': HOME / '.local' / 'share' / 'fonts',
     'local_bin': HOME / '.local' / 'bin'
 }
 
-# URL для загрузки (обновленные)
+# URL для загрузки
 DOWNLOAD_URLS = {
     'nerd_fonts': "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip",
     'noto_emoji': "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf",
     'sway_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config",
     'waybar_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.jsonc",
     'waybar_style': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/style.css",
-    'sample_photo': "https://github.com/1q2w3e4rf/config_sway/raw/main/1.jpg"
+    'sample_photo': "https://github.com/1q2w3e4rf/config_sway/raw/main/1.jpg",
+    'rofi_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/rofi/config.rasi",
+    'rofi_theme': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/rofi/theme.rasi",
+    'wlogout_layout': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/wlogout/layout",
+    'swaync_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/swaync/config.json",
+    'swaync_style': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/swaync/style.css"
 }
 
-# Скрипты для Waybar (остаются без изменений)
-WAYBAR_SCRIPTS = {
+# Скрипты для Waybar и системы
+SCRIPTS = {
+    'power-menu.sh': """#!/bin/bash
+# Меню питания с rofi
+options="Выключить\nПерезагрузить\nВыйти\nЗаблокировать"
+selected=$(echo -e "$options" | rofi -dmenu -p "Действие:" -theme ~/.config/rofi/theme.rasi)
+
+case $selected in
+    "Выключить") systemctl poweroff ;;
+    "Перезагрузить") systemctl reboot ;;
+    "Выйти") swaymsg exit ;;
+    "Заблокировать") swaylock ;;
+esac""",
+    
+    'brightness.sh': """#!/bin/bash
+# Управление яркостью
+case $1 in
+    -inc) brightnessctl set 5%+ ;;
+    -dec) brightnessctl set 5%- ;;
+    *) echo "Использование: $0 [-inc | -dec]" ;;
+esac""",
+    
+    'wifi-menu.sh': """#!/bin/bash
+# Меню управления Wi-Fi
+options="Подключиться\nОтключиться\nСписок сетей"
+selected=$(echo -e "$options" | rofi -dmenu -p "Wi-Fi:" -theme ~/.config/rofi/theme.rasi)
+
+case $selected in
+    "Подключиться") nmtui-connect ;;
+    "Отключиться") nmcli radio wifi off ;;
+    "Список сетей") nmtui ;;
+esac""",
+    
+    'bluetooth-menu.sh': """#!/bin/bash
+# Меню управления Bluetooth
+options="Включить\nВыключить\nПодключить устройство"
+selected=$(echo -e "$options" | rofi -dmenu -p "Bluetooth:" -theme ~/.config/rofi/theme.rasi)
+
+case $selected in
+    "Включить") bluetoothctl power on ;;
+    "Выключить") bluetoothctl power off ;;
+    "Подключить устройство") bluetoothctl scan on ;;
+esac""",
+    
+    'screenshot.sh': """#!/bin/bash
+# Скриншоты
+dir="$HOME/screenshots"
+[ -d "$dir" ] || mkdir -p "$dir"
+
+case $1 in
+    full) grim "$dir/screenshot-$(date +%Y%m%d-%H%M%S).png" ;;
+    area) grim -g "$(slurp)" "$dir/screenshot-$(date +%Y%m%d-%H%M%S).png" ;;
+    *) echo "Использование: $0 [full|area]" ;;
+esac""",
+    
     'language.py': """#!/usr/bin/env python3
 import json
 import subprocess
@@ -99,7 +161,24 @@ def get_notifications():
     except:
         return {"text": "", "tooltip": "Ошибка уведомлений"}
 
-print(json.dumps(get_notifications()))"""
+print(json.dumps(get_notifications()))""",
+    
+    'weather.py': """#!/usr/bin/env python3
+import json
+import subprocess
+
+def get_weather():
+    try:
+        weather = subprocess.check_output(["curl", "-s", "wttr.in/Vyazniki?format=%c+%t"]).decode().strip()
+        return {
+            "text": weather,
+            "tooltip": "Погода в Вязниках",
+            "class": "weather"
+        }
+    except:
+        return {"text": "⛅", "tooltip": "Ошибка получения погоды"}
+
+print(json.dumps(get_weather()))"""
 }
 
 class Colors:
@@ -153,15 +232,24 @@ def install_packages():
     print(f"{Colors.HEADER}Установка пакетов...{Colors.ENDC}")
     
     packages = [
-        'sway', 'waybar', 'alacritty', 'rofi', 'grim', 'slurp',
-        'pavucontrol', 'playerctl', 'brightnessctl', 'swaylock',
-        'swayidle', 'swaync', 'networkmanager', 'blueman',
-        'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji',
-        'python-pip', 'python-i3ipc', 'polkit-gnome',
-        'meson', 'scdoc', 'wayland-protocols', 'jsoncpp',
-        'libmpdclient', 'libnl', 'libpulse', 'libepoxy',
-        'gtk-layer-shell', 'wireplumber', 'jq', 'htop',
-        'python-requests', 'python-setuptools'
+        # Основные
+        'sway', 'waybar', 'alacritty', 'rofi', 'grim', 'slurp', 'wf-recorder',
+        'pavucontrol', 'playerctl', 'brightnessctl', 'swaylock', 'swayidle',
+        'swaync', 'networkmanager', 'blueman', 'nmtui', 'wlogout',
+        
+        # Шрифты
+        'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji', 'ttf-dejavu', 'ttf-liberation',
+        
+        # Утилиты
+        'python-pip', 'python-i3ipc', 'polkit-gnome', 'meson', 'scdoc',
+        'wayland-protocols', 'jsoncpp', 'libmpdclient', 'libnl', 'libpulse',
+        'libepoxy', 'gtk-layer-shell', 'wireplumber', 'jq', 'htop', 'bmon',
+        'python-requests', 'python-setuptools', 'curl', 'wget', 'git',
+        
+        # Дополнительные
+        'mpv', 'imv', 'zathura', 'zathura-pdf-mupdf', 'thunar', 'file-roller',
+        'xdg-user-dirs', 'xdg-utils', 'qt5-wayland', 'qt6-wayland',
+        'wl-clipboard', 'clipman', 'mako', 'libnotify'
     ]
     
     if not run_cmd(f"pacman -S --needed --noconfirm {' '.join(packages)}", sudo=True):
@@ -197,8 +285,13 @@ def setup_configs():
     # Создание директорий
     os.makedirs(HOME / '.config' / 'sway', exist_ok=True)
     os.makedirs(HOME / '.config' / 'waybar', exist_ok=True)
+    os.makedirs(HOME / '.config' / 'rofi', exist_ok=True)
+    os.makedirs(HOME / '.config' / 'wlogout', exist_ok=True)
+    os.makedirs(HOME / '.config' / 'swaync', exist_ok=True)
+    os.makedirs(CONFIG_PATHS['waybar_scripts'], exist_ok=True)
     os.makedirs(HOME / 'photo', exist_ok=True)
-    os.makedirs(HOME / 'Scripts', exist_ok=True)
+    os.makedirs(CONFIG_PATHS['scripts_dir'], exist_ok=True)
+    os.makedirs(CONFIG_PATHS['fonts_dir'], exist_ok=True)
     os.makedirs(CONFIG_PATHS['local_bin'], exist_ok=True)
     
     # Загрузка конфигов
@@ -219,84 +312,78 @@ def setup_configs():
     if download_file(DOWNLOAD_URLS['waybar_style'], waybar_style_temp):
         shutil.copy(waybar_style_temp, CONFIG_PATHS['waybar_style'])
     
+    # Rofi config
+    rofi_config_temp = TEMP_PATH / "rofi_config"
+    if download_file(DOWNLOAD_URLS['rofi_config'], rofi_config_temp):
+        shutil.copy(rofi_config_temp, CONFIG_PATHS['rofi_config'])
+    
+    # Rofi theme
+    rofi_theme_temp = TEMP_PATH / "rofi_theme"
+    if download_file(DOWNLOAD_URLS['rofi_theme'], rofi_theme_temp):
+        shutil.copy(rofi_theme_temp, CONFIG_PATHS['rofi_theme'])
+    
+    # Wlogout layout
+    wlogout_temp = TEMP_PATH / "wlogout_layout"
+    if download_file(DOWNLOAD_URLS['wlogout_layout'], wlogout_temp):
+        shutil.copy(wlogout_temp, CONFIG_PATHS['wlogout_config'])
+    
+    # SwayNC config
+    swaync_config_temp = TEMP_PATH / "swaync_config"
+    if download_file(DOWNLOAD_URLS['swaync_config'], swaync_config_temp):
+        shutil.copy(swaync_config_temp, CONFIG_PATHS['swaync_config'])
+    
+    # SwayNC style
+    swaync_style_temp = TEMP_PATH / "swaync_style"
+    if download_file(DOWNLOAD_URLS['swaync_style'], swaync_style_temp):
+        shutil.copy(swaync_style_temp, CONFIG_PATHS['swaync_style'])
+    
     # Скрипты Waybar
     print(f"{Colors.OKBLUE}Настройка скриптов Waybar...{Colors.ENDC}")
-    for script_name, script_content in WAYBAR_SCRIPTS.items():
-        script_path = CONFIG_PATHS['waybar_scripts'] / script_name
+    for script_name, script_content in SCRIPTS.items():
+        if script_name.endswith('.py'):
+            script_path = CONFIG_PATHS['waybar_scripts'] / script_name
+        else:
+            script_path = CONFIG_PATHS['scripts_dir'] / script_name
+        
         with open(script_path, 'w') as f:
             f.write(script_content)
         os.chmod(script_path, 0o755)
     
-    # Фото (исправленный URL)
+    # Фото
     photo_temp = TEMP_PATH / "1.jpg"
     if download_file(DOWNLOAD_URLS['sample_photo'], photo_temp):
         shutil.copy(photo_temp, CONFIG_PATHS['photo'])
     else:
-        # Альтернатива если фото не загружается
         print(f"{Colors.WARNING}Не удалось загрузить фото, создаем пустое...{Colors.ENDC}")
         with open(CONFIG_PATHS['photo'], 'wb') as f:
             f.write(b'\x00')
 
-    # Основной скрипт
-    script_path = CONFIG_PATHS['scripts_dir'] / '1.py'
-    with open(script_path, 'w') as f:
-        f.write("""#!/usr/bin/env python3
-print("File sorter service running")""")
-    os.chmod(script_path, 0o755)
-
-def create_service():
-    """Создание systemd сервиса"""
-    print(f"{Colors.HEADER}Создание сервиса...{Colors.ENDC}")
+def setup_services():
+    """Настройка сервисов"""
+    print(f"{Colors.HEADER}Настройка сервисов...{Colors.ENDC}")
     
-    service_content = f"""[Unit]
-Description=File Sorter Service
-After=network.target
+    # Автозапуск приложений
+    autostart_script = HOME / '.config' / 'sway' / 'autostart'
+    with open(autostart_script, 'w') as f:
+        f.write("""#!/bin/bash
+# Автозапуск приложений
+swayidle -w \\
+    timeout 300 'swaylock -f -c 000000' \\
+    timeout 600 'swaymsg "output * dpms off"' \\
+    resume 'swaymsg "output * dpms on"' \\
+    before-sleep 'swaylock -f -c 000000' &
 
-[Service]
-Type=simple
-User={USER}
-ExecStart=/usr/bin/python3 {CONFIG_PATHS['scripts_dir']}/1.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-"""
+swaync &
+nm-applet --indicator &
+blueman-applet &
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+wl-paste -t text --watch clipman store &
+""")
+    os.chmod(autostart_script, 0o755)
     
-    try:
-        # Попробуем создать глобальный сервис
-        try:
-            with open(CONFIG_PATHS['service_file'], 'w') as f:
-                f.write(service_content)
-        except PermissionError:
-            print(f"{Colors.WARNING}Требуются права sudo для создания сервиса...{Colors.ENDC}")
-            password = getpass.getpass(f"{Colors.WARNING}Введите пароль sudo: {Colors.ENDC}")
-            run_cmd(f"echo '{service_content}' | sudo tee {CONFIG_PATHS['service_file']}", sudo=True, password=password)
-        
-        run_cmd("systemctl daemon-reload", sudo=True)
-        run_cmd("systemctl enable filesorter.service", sudo=True)
-        run_cmd("systemctl start filesorter.service", sudo=True)
-        
-        print(f"{Colors.OKGREEN}Сервис успешно создан и запущен{Colors.ENDC}")
-    except Exception as e:
-        print(f"{Colors.FAIL}Ошибка при создании сервиса: {e}{Colors.ENDC}")
-        
-        # Попробуем создать пользовательский сервис
-        print(f"{Colors.WARNING}Попытка создать пользовательский сервис...{Colors.ENDC}")
-        user_service_dir = HOME / '.config' / 'systemd' / 'user'
-        user_service_dir.mkdir(parents=True, exist_ok=True)
-        
-        user_service_file = user_service_dir / 'filesorter.service'
-        with open(user_service_file, 'w') as f:
-            f.write(service_content)
-        
-        run_cmd("systemctl --user daemon-reload")
-        run_cmd("systemctl --user enable filesorter.service")
-        run_cmd("systemctl --user start filesorter.service")
-        
-        print(f"{Colors.OKGREEN}Пользовательский сервис создан{Colors.ENDC}")
-        print(f"{Colors.BOLD}Для автозапуска выполните:{Colors.ENDC}")
-        print("  loginctl enable-linger")
+    # Добавляем автозапуск в конфиг Sway
+    with open(CONFIG_PATHS['sway_config'], 'a') as f:
+        f.write("\nexec_always ~/.config/sway/autostart\n")
 
 def main():
     print(f"{Colors.HEADER}{Colors.BOLD}Полная автоматическая настройка системы{Colors.ENDC}")
@@ -316,16 +403,16 @@ def main():
         # Настройка конфигураций
         setup_configs()
         
-        # Создание сервиса
-        create_service()
+        # Настройка сервисов
+        setup_services()
         
         print(f"\n{Colors.OKGREEN}{Colors.BOLD}Настройка успешно завершена!{Colors.ENDC}")
         print(f"\n{Colors.BOLD}Что сделано:{Colors.ENDC}")
         print("- Установлены все необходимые пакеты")
         print("- Установлены шрифты (Nerd Fonts + Emoji)")
-        print("- Настроены конфиги Sway и Waybar")
-        print("- Установлены скрипты Waybar")
-        print("- Создан и запущен systemd сервис")
+        print("- Настроены конфиги Sway, Waybar, Rofi, Wlogout")
+        print("- Установлены скрипты для Waybar и управления системой")
+        print("- Настроен автозапуск необходимых сервисов")
         print(f"\n{Colors.BOLD}Перезагрузите систему для применения изменений{Colors.ENDC}")
     
     except KeyboardInterrupt:
