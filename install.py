@@ -7,8 +7,10 @@ import getpass
 import requests
 import tarfile
 import zipfile
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from datetime import datetime, timedelta
 
 # Конфигурация
 USER = os.getenv('USER')
@@ -23,7 +25,10 @@ CONFIG_PATHS = {
     'waybar_style': HOME / '.config' / 'waybar' / 'style.css',
     'waybar_scripts': HOME / '.config' / 'waybar',
     'photo': HOME / 'photo' / '1.jpg',
+    'local_bin': HOME / '.local' / 'bin',
+    'fonts_dir': HOME / '.local' / 'share' / 'fonts',
     'rofi_config': HOME / '.config' / 'rofi' / 'config.rasi',
+    'alacritty_config': HOME / '.config' / 'alacritty' / 'alacritty.toml'
 }
 
 # URL для загрузки
@@ -34,7 +39,7 @@ DOWNLOAD_URLS = {
     'waybar_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.jsonc",
     'waybar_style': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/style.css",
     'sample_photo': "https://github.com/1q2w3e4rf/config_sway/raw/main/1.jpg",
-    'rofi_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.rasi",
+    'rofi_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.rasi"
 }
 
 class Colors:
@@ -46,6 +51,14 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+def format_size(size):
+    """Форматирование размера в читаемый вид"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size < 1024.0:
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} TB"
 
 def run_cmd(cmd, sudo=False, password=None):
     """Выполнить команду с обработкой ошибок"""
@@ -69,18 +82,56 @@ def run_cmd(cmd, sudo=False, password=None):
         print(f"{Colors.FAIL}Ошибка при выполнении: {cmd}{Colors.ENDC}")
         return False
 
-def download_file(url, dest):
-    """Скачать файл по URL"""
+def download_file_with_progress(url, dest):
+    """Скачать файл по URL с отображением прогресса"""
     print(f"{Colors.OKBLUE}Скачивание {url}...{Colors.ENDC}")
     try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        with open(dest, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        return True
+        start_time = time.time()
+        last_print = start_time
+        downloaded = 0
+        
+        with requests.get(url, stream=True) as response:
+            response.raise_for_status()
+            total_size = int(response.headers.get('content-length', 0))
+            
+            with open(dest, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        
+                        now = time.time()
+                        if now - last_print >= 1.0:  # Обновляем каждую секунду
+                            elapsed = now - start_time
+                            speed = downloaded / elapsed if elapsed > 0 else 0
+                            remaining = (total_size - downloaded) / speed if speed > 0 else 0
+                            
+                            # Форматируем оставшееся время
+                            if remaining > 3600:
+                                remaining_str = str(timedelta(seconds=int(remaining)))
+                            elif remaining > 60:
+                                remaining_str = f"{int(remaining // 60)} мин {int(remaining % 60)} сек"
+                            else:
+                                remaining_str = f"{int(remaining)} сек"
+                            
+                            progress = (downloaded / total_size) * 100 if total_size > 0 else 0
+                            print(
+                                f"\rПрогресс: {progress:.1f}% | "
+                                f"Скачано: {format_size(downloaded)} / {format_size(total_size)} | "
+                                f"Скорость: {format_size(speed)}/сек | "
+                                f"Осталось: {remaining_str}",
+                                end='', flush=True
+                            )
+                            last_print = now
+            
+            print()  # Новая строка после завершения загрузки
+            return True
+            
+    except requests.exceptions.RequestException as e:
+        print(f"\n{Colors.FAIL}Ошибка при загрузке: {e}{Colors.ENDC}")
+        return False
     except Exception as e:
-        print(f"{Colors.FAIL}Ошибка при загрузке: {e}{Colors.ENDC}")
+        print(f"\n{Colors.FAIL}Неизвестная ошибка: {e}{Colors.ENDC}")
         return False
 
 def install_yay():
@@ -104,14 +155,14 @@ def install_packages():
     packages = [
         'sway', 'waybar', 'alacritty', 'rofi', 'grim', 'slurp',
         'pavucontrol', 'playerctl', 'brightnessctl', 'swaylock',
-        'swayidle', 'swaync', 'networkmanager', 'blueman',
+        'swayidle', 'networkmanager', 'blueman',
         'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji',
         'python-pip', 'python-i3ipc', 'polkit-gnome',
         'meson', 'scdoc', 'wayland-protocols', 'jsoncpp',
         'libmpdclient', 'libnl', 'libpulse', 'libepoxy',
         'gtk-layer-shell', 'wireplumber', 'jq', 'htop',
         'python-requests', 'python-setuptools', 'wf-recorder',
-        'wlogout', 'nwg-look-bin', 'swaybg', 'mako',
+        'nwg-look-bin', 'swaybg', 'mako',
         'wl-clipboard', 'imv', 'zathura', 'zathura-pdf-mupdf',
         'qt5-wayland', 'qt6-wayland', 'xdg-desktop-portal-wlr',
         'libappindicator-gtk3', 'libnotify', 'pamixer',
@@ -132,13 +183,13 @@ def install_fonts():
     
     # Nerd Fonts
     nerd_zip = TEMP_PATH / "nerd_fonts.zip"
-    if download_file(DOWNLOAD_URLS['nerd_fonts'], nerd_zip):
+    if download_file_with_progress(DOWNLOAD_URLS['nerd_fonts'], nerd_zip):
         with zipfile.ZipFile(nerd_zip, 'r') as zip_ref:
             zip_ref.extractall(CONFIG_PATHS['fonts_dir'])
     
     # Noto Emoji
     emoji_font = TEMP_PATH / "NotoColorEmoji.ttf"
-    if download_file(DOWNLOAD_URLS['noto_emoji'], emoji_font):
+    if download_file_with_progress(DOWNLOAD_URLS['noto_emoji'], emoji_font):
         shutil.copy(emoji_font, CONFIG_PATHS['fonts_dir'])
     
     # Обновление кэша шрифтов
@@ -151,9 +202,8 @@ def setup_configs():
     # Создание директорий
     os.makedirs(HOME / '.config' / 'sway', exist_ok=True)
     os.makedirs(HOME / '.config' / 'waybar', exist_ok=True)
-    os.makedirs(HOME / '.config' / 'swaync', exist_ok=True)
     os.makedirs(HOME / '.config' / 'rofi', exist_ok=True)
-    os.makedirs(HOME / '.config' / 'wlogout', exist_ok=True)
+    os.makedirs(HOME / '.config' / 'alacritty', exist_ok=True)
     os.makedirs(HOME / 'photo', exist_ok=True)
     os.makedirs(CONFIG_PATHS['local_bin'], exist_ok=True)
     
@@ -162,43 +212,71 @@ def setup_configs():
     
     # Sway config
     sway_config_temp = TEMP_PATH / "sway_config"
-    if download_file(DOWNLOAD_URLS['sway_config'], sway_config_temp):
+    if download_file_with_progress(DOWNLOAD_URLS['sway_config'], sway_config_temp):
         shutil.copy(sway_config_temp, CONFIG_PATHS['sway_config'])
     
     # Waybar config
     waybar_config_temp = TEMP_PATH / "waybar_config"
-    if download_file(DOWNLOAD_URLS['waybar_config'], waybar_config_temp):
+    if download_file_with_progress(DOWNLOAD_URLS['waybar_config'], waybar_config_temp):
         shutil.copy(waybar_config_temp, CONFIG_PATHS['waybar_config'])
     
     # Waybar style
     waybar_style_temp = TEMP_PATH / "waybar_style"
-    if download_file(DOWNLOAD_URLS['waybar_style'], waybar_style_temp):
+    if download_file_with_progress(DOWNLOAD_URLS['waybar_style'], waybar_style_temp):
         shutil.copy(waybar_style_temp, CONFIG_PATHS['waybar_style'])
-    
-    # SwayNC config
-    swaync_config_temp = TEMP_PATH / "swaync_config"
-    if download_file(DOWNLOAD_URLS['swaync_config'], swaync_config_temp):
-        shutil.copy(swaync_config_temp, CONFIG_PATHS['swaync_config'])
-    
-    # SwayNC style
-    swaync_style_temp = TEMP_PATH / "swaync_style"
-    if download_file(DOWNLOAD_URLS['swaync_style'], swaync_style_temp):
-        shutil.copy(swaync_style_temp, CONFIG_PATHS['swaync_style'])
     
     # Rofi config
     rofi_config_temp = TEMP_PATH / "rofi_config"
-    if download_file(DOWNLOAD_URLS['rofi_config'], rofi_config_temp):
+    if download_file_with_progress(DOWNLOAD_URLS['rofi_config'], rofi_config_temp):
         shutil.copy(rofi_config_temp, CONFIG_PATHS['rofi_config'])
-    
-    # Wlogout layout
-    wlogout_layout_temp = TEMP_PATH / "wlogout_layout"
-    if download_file(DOWNLOAD_URLS['wlogout_layout'], wlogout_layout_temp):
-        shutil.copy(wlogout_layout_temp, CONFIG_PATHS['wlogout_config'])
     
     # Фото
     photo_temp = TEMP_PATH / "1.jpg"
-    if download_file(DOWNLOAD_URLS['sample_photo'], photo_temp):
+    if download_file_with_progress(DOWNLOAD_URLS['sample_photo'], photo_temp):
         shutil.copy(photo_temp, CONFIG_PATHS['photo'])
+    
+    # Конфиг Alacritty
+    alacritty_config = """
+[window]
+opacity = 0.9
+padding.x = 12
+padding.y = 12
+decorations = "full"
+decorations_theme_variant = "dark"  # Для чёрного интерфейса
+
+[font]
+size = 14.0
+
+# Используем Fira Code с явным указанием стилей
+normal.family = "Fira Code"
+bold.family = "Fira Code"
+italic.family = "Fira Code"
+bold_italic.family = "Fira Code"
+
+# Фикс съезжающих букв:
+glyph_offset.y = 1  # Корректировка по вертикали
+offset.x = 0
+offset.y = 1
+
+[colors]
+# Чёрный терминал (инверсия цветов)
+primary.foreground = "#ffffff"  # Белый текст
+primary.background = "#000000"  # Чёрный фон
+
+# Цвета курсора (инвертированные)
+cursor.text = "#000000"  # Чёрный текст под курсором
+cursor.cursor = "#ffffff"  # Белый курсор
+
+[colors.normal]
+black = "#000000"
+white = "#ffffff"
+
+[colors.bright]
+black = "#222222"
+white = "#eeeeee"
+"""
+    with open(CONFIG_PATHS['alacritty_config'], 'w') as f:
+        f.write(alacritty_config.strip())
     
     # Скрипты Waybar
     print(f"{Colors.OKBLUE}Настройка скриптов Waybar...{Colors.ENDC}")
@@ -247,25 +325,6 @@ def get_media():
         return {"text": "", "tooltip": "Ошибка плеера"}
 
 print(json.dumps(get_media()))""",
-        
-        'notification.py': """#!/usr/bin/env python3
-import json
-import subprocess
-
-def get_notifications():
-    try:
-        count = int(subprocess.check_output(["swaync-client", "-c"]).decode())
-        dnd = subprocess.check_output(["swaync-client", "-D"]).decode().strip() == "true"
-        icon = "" if dnd else "" if count > 0 else ""
-        return {
-            "text": str(count) if count > 0 else "",
-            "tooltip": f"{count} уведомлений" if count > 0 else "Режим 'Не беспокоить'" if dnd else "Нет уведомлений",
-            "class": "dnd" if dnd else "active" if count > 0 else "inactive"
-        }
-    except:
-        return {"text": "", "tooltip": "Ошибка уведомлений"}
-
-print(json.dumps(get_notifications()))""",
         
         'power-menu.py': """#!/usr/bin/env python3
 import subprocess
@@ -404,7 +463,7 @@ def main():
         print("- Установлен yay (AUR helper)")
         print("- Установлены все необходимые пакеты через yay")
         print("- Установлены шрифты (Nerd Fonts + Emoji)")
-        print("- Настроены конфиги Sway, Waybar, Rofi, SwayNC, Wlogout")
+        print("- Настроены конфиги Sway, Waybar, Rofi, Alacritty")
         print("- Установлены скрипты Waybar в ~/.config/waybar")
         print("- Настроен автозапуск Sway через systemd")
         print(f"\n{Colors.BOLD}Перезагрузите систему для применения изменений{Colors.ENDC}")
