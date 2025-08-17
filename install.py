@@ -153,22 +153,65 @@ def install_packages():
     print(f"{Colors.HEADER}Установка пакетов...{Colors.ENDC}")
     
     packages = [
-        'sway', 'waybar', 'alacritty', 'rofi', 'grim', 'slurp',
-        'pavucontrol', 'playerctl', 'brightnessctl', 'swaylock',
-        'swayidle', 'networkmanager', 'blueman',
-        'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji',
-        'python-pip', 'python-i3ipc', 'polkit-gnome',
-        'meson', 'scdoc', 'wayland-protocols', 'jsoncpp',
-        'libmpdclient', 'libnl', 'libpulse', 'libepoxy',
-        'gtk-layer-shell', 'wireplumber', 'jq', 'htop',
-        'python-requests', 'python-setuptools', 'wf-recorder',
-        'nwg-look-bin', 'swaybg', 'mako',
-        'wl-clipboard', 'imv', 'zathura', 'zathura-pdf-mupdf',
-        'qt5-wayland', 'qt6-wayland', 'xdg-desktop-portal-wlr',
-        'libappindicator-gtk3', 'libnotify', 'pamixer',
-        'light', 'bluez', 'bluez-utils', 'pulseaudio-bluetooth'
+        # Основные компоненты Sway
+        'sway', 'swaybg', 'swayidle', 'swaylock', 'swaync',
+
+        # Waybar и его зависимости
+        'waybar', 'gtk-layer-shell', 'libdbusmenu-gtk3',
+
+        # Терминал и лаунчеры
+        'alacritty', 'rofi', 'wofi', 'wlogout',
+
+        # Шрифты и иконки
+        'ttf-jetbrains-mono-nerd',
+        'noto-fonts-emoji',
+        'ttf-font-awesome',
+        'nerd-fonts-complete',
+        'adwaita-icon-theme',
+
+        # Аудио
+        'pulseaudio', 'pulseaudio-alsa', 'pulseaudio-bluetooth',
+        'pavucontrol', 'pamixer', 'wireplumber',
+        'playerctl', 'libpulse',
+
+        # Сеть
+        'networkmanager', 'network-manager-applet',
+        'wireless_tools', 'iwd', 'blueman',
+        'bluez', 'bluez-utils',
+
+        # Системные утилиты
+        'brightnessctl', 'light', 'upower',
+        'polkit-gnome', 'gnome-keyring',
+        'libnotify', 'dunst',
+
+        # Скриншоты и запись экрана
+        'grim', 'slurp', 'wf-recorder',
+        'wl-clipboard', 'clipman',
+
+        # Python модули
+        'python', 'python-pip',
+        'python-dbus-next', 'python-requests',
+        'python-gobject', 'python-i3ipc',
+
+        # Графические зависимости
+        'qt5-wayland', 'qt6-wayland',
+        'xdg-desktop-portal-wlr',
+        'gtk3', 'gtk-engine-murrine',
+        'mesa', 'glu', 'vulkan-radeon',
+
+        # Дополнительные инструменты
+        'jq', 'htop', 'curl', 'imv',
+        'zathura', 'zathura-pdf-mupdf',
+        'nmtui', 'nwg-look-bin',
+
+        # Для VPN модуля
+        'wireguard-tools', 'openvpn',
+
+        # Системные библиотеки
+        'jsoncpp', 'libmpdclient',
+        'libnl', 'libepoxy', 'scdoc'
     ]
-    
+
     if not run_cmd(f"yay -S --needed --noconfirm {' '.join(packages)}"):
         print(f"{Colors.WARNING}Попробуем установить пакеты по одному...{Colors.ENDC}")
         for pkg in packages:
