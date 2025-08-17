@@ -61,13 +61,9 @@
         "format-ethernet": "🔌 {bandwidthDownBits}",
         "format-wifi": "📶 {bandwidthDownBits}",
         "format-disconnected": "⚠️ Offline",
-        "tooltip": true,
-        "tooltip-format": "▸ {ifname}\n▸ IP: {ipaddr}\n▸ MAC: {macaddr}",
+        "tooltip": false,
         "interval": 3,
-        "exec": "NET_DEV=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $5}'); [ -z \"$NET_DEV\" ] && NET_DEV=$(ip link show | awk -F': ' '/state UP/ {print $2; exit}'); echo \"{\\\"ifname\\\":\\\"$NET_DEV\\\",\\\"ipaddr\\\":\\\"$(ip -o -4 addr show $NET_DEV | awk '{print $4}' | cut -d'/' -f1)\\\",\\\"macaddr\\\":\\\"$(ip link show $NET_DEV | awk '/ether/ {print $2}')\\\"}\"",
-        "return-type": "json",
-        "on-click": "nmtui-connect",
-        "on-click-right": "alacritty -e bmon"
+        "on-click": "nmtui-connect"
     },
     // Остальные модули...
     "sway/window": {
