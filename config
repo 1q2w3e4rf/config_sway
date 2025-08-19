@@ -1,4 +1,4 @@
-#!.config/seay/config
+#!.config/sway/config
 # ======================================================
 # Config для sway
 # Версия: 0.1.0
@@ -9,9 +9,9 @@
 
 ### Переменные
 #
-# Клавиша-модификатор (обычно Win/Logo)
+# Клавиша-модификатор
 set $mod Mod4
-# Клавиши навигации (как в Vim)
+# Клавиши навигации
 set $left h
 set $down j
 set $up k
@@ -19,33 +19,29 @@ set $right l
 
 # Терминал по умолчанию
 set $term alacritty
-# Запуск приложений (лаунчер)
-set $menu exec wmenu
+# Запуск приложений
+set $menu exec rofi -show drun -config ~/.config/rofi/config.rasi 
 # Браузер по умолчанию
 set $browser firefox-beta-bin
 # Файловый менеджер
 set $filemanager dolphin
 # Steam
 set $steam steam
-# Настройки курсора
-seat * xcursor_theme Bibata-Modern-Ice 24 
+
+### Настройки курсора
+
+seat * xcursor_theme Bibata-Modern-Ice 24
+
 seat * hide_cursor 5000
+
 ### Настройки ввода
 #
-# Обои рабочего стола (другие варианты в /usr/share/backgrounds/sway/)
+# Обои рабочего стола
 output * bg /home/rek/photo/1.jpg fill
 
 ### Настройки ввода
-#
-# Пример для тачпада Synaptics:
-input "2:14:SynPS/2_Synaptics_TouchPad" {
-    dwt enabled       # Отключение при печати
-    tap enabled      # Тапы вместо кликов
-    natural_scroll enabled  # Натуральная прокрутка
-    middle_emulation enabled  # Эмуляция средней кнопки
-}
 
-# Раскладка клавиатуры (переключение по Caps Lock)
+# Раскладка клавиатуры
 input * {
     xkb_layout "us,ru"
     xkb_options "grp:caps_toggle, grp:shift_caps_toggle, grp_led:caps"
@@ -54,11 +50,6 @@ input * {
 # Скриншоты:
 bindsym Print exec grim ~/screenshots/-"$(date +%s)".png
 bindsym $mod+Print exec grim -g "$(slurp)" ~/screenshots/-"$(date +%s)".png
-
-# Скринкаст (запись экрана)
-set $screencast_dir ~/screenshots
-bindsym Mod1+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill -x wf-recorder; notify-send "Скринкаст остановлен"; else mkdir -p $screencast_dir && wf-recorder -g "$(slurp)" -f "$screencast_dir/recording_$(date +%Y%m%d_%H%M%S).mp4" && notify-send "Скринкаст запущен (область)"; fi'
-bindsym Mod1+$mod+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill -x wf-recorder; notify-send "Скринкаст остановлен"; else mkdir -p $screencast_dir && wf-recorder -f "$screencast_dir/recording_$(date +%Y%m%d_%H%M%S).mp4" && notify-send "Скринкаст запущен (весь экран)"; fi'
 
 # Звук
 bindsym F2 exec amixer -D pulse sset Master 5%-
@@ -69,7 +60,6 @@ bindsym F1 exec amixer -D pulse sset Master toggle
 input "type:pointer" accel_profile flat
 
 ### Горячие клавиши
-#
 # Основные:
     # Запуск терминала
     bindsym $mod+Return exec $term
@@ -87,7 +77,7 @@ input "type:pointer" accel_profile flat
     bindsym $mod+Shift+q kill
 
     # Открыть лаунчер приложений
-    bindsym $mod+d exec rofi -show drun -config ~/.config/rofi/config.rasi
+    bindsym $mod+d exec $menu
 
     # Режим перемещения/изменения размеров окон
     floating_modifier $mod normal
@@ -104,7 +94,7 @@ input "type:pointer" accel_profile flat
     bindsym $mod+$down focus down
     bindsym $mod+$up focus up
     bindsym $mod+$right focus right
-    # Альтернативные клавиши (стрелки)
+    # Альтернативные клавиши
     bindsym $mod+Left focus left
     bindsym $mod+Down focus down
     bindsym $mod+Up focus up
@@ -121,11 +111,9 @@ input "type:pointer" accel_profile flat
     bindsym $mod+Shift+Up move up
     bindsym $mod+Shift+Right move right
 
-# Рабочие пространства (Workspaces):
+# Рабочие пространства
     # Переключение между рабочими пространствами 1-10
     bindsym --to-code $mod+1 workspace number 1
-    bindsym --to-code $mod+2 workspace number 2
-    bindsym --to-code $mod+3 workspace number 3
     bindsym --to-code $mod+4 workspace number 4
     bindsym --to-code $mod+5 workspace number 5
     bindsym --to-code $mod+6 workspace number 6
@@ -168,7 +156,7 @@ input "type:pointer" accel_profile flat
     # Фокус на родительский контейнер
     bindsym $mod+a focus parent
 
-# Область временных окон (Scratchpad):
+# Область временных окон
     # Отправить окно в scratchpad
     bindsym $mod+Shift+minus move scratchpad
 
@@ -205,21 +193,16 @@ bindsym $mod+r mode "resize"
     bindsym --to-code XF86MonBrightnessUp exec sh ~/.config/sway/backlight.sh -inc 20
     bindsym --to-code XF86MonBrightnessDown exec sh ~/.config/sway/backlight.sh -dec 20
 
-  # Отступы между окнами
-  gaps inner 5
+    # Отступы между окнами
+    gaps inner 5
 
-  # Стиль границ окон (без заголовков)
-  default_border pixel 3
-  
-  # Bitwarden (менеджер паролей)
-    bindsym --to-code $mod+c exec flatpak run com.bitwarden.desktop
+    # Стиль границ окон
+    default_border pixel 3
 
-# Панель (используется Waybar)
+# Панель
 bar {
     swaybar_command waybar
 }
-
-
 
 # Подключение дополнительных конфигов
 include /etc/sway/config.d/*
