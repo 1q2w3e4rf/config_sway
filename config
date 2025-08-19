@@ -98,10 +98,6 @@ input "type:pointer" accel_profile flat
     # Выход из Sway
     bindsym $mod+Shift+e exec swaynag -t warning -m 'Вы нажали комбинацию для выхода. Завершить сеанс Sway?' -B 'Да, выйти' 'swaymsg exit'
 
-    bindsym Mod1+F4 exec systemctl poweroff
-    
-    bindsym Mod1+F3 exec systemctl reboot
-
 # Навигация:
     # Перемещение фокуса
     bindsym $mod+$left focus left
