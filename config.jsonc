@@ -32,14 +32,14 @@
         "all-outputs": true,
         "format": "{icon}",
         "format-icons": {
-            "1": "",
+            "1": " ",
             "2": "",
-            "3": "",
-            "4": "",
-            "5": "",
-            "urgent": "",
-            "focused": "",
-            "default": ""
+            "3": "󱢴",
+            "4": "",
+            "5": "",
+            "urgent": "",
+            "focused": "󰽶",
+            "default": "󰳽"
         },
         "persistent_workspaces": {
             "*": 5
@@ -51,16 +51,16 @@
         "exec-if": "which wg-quick",
         "return-type": "json",
         "interval": 5,
-        "format": "🌍",
+        "format": "  ",
         "on-click": "if systemctl is-active --quiet wg-quick@wg0; then sudo systemctl stop wg-quick@wg0; else sudo systemctl start wg-quick@wg0; fi",
         "on-click-right": "alacritty -e sudo wg show"
     },
     // Модуль сети
     "network": {
-        "format": "🌐",
-        "format-ethernet": "🔌 {bandwidthDownBits}",
-        "format-wifi": "📶 {bandwidthDownBits}",
-        "format-disconnected": "⚠️ Offline",
+        "format": " 󰖩",
+        "format-ethernet": " 󰖩 {bandwidthDownBits}",
+        "format-wifi": " 󰖩 {bandwidthDownBits}",
+        "format-disconnected": " 󰖪 Offline",
         "tooltip": false,
         "interval": 3,
         "on-click": "nmtui-connect"
@@ -73,7 +73,7 @@
     },
 
     "custom/launcher": {
-        "format": "",
+        "format": "",
         "on-click": "rofi -show drun -config ~/.config/rofi/config.rasi",
         "on-click-right": "rofi -show run -config ~/.config/rofi/config.rasi",
         "tooltip": false
@@ -83,14 +83,14 @@
         "exec": "/etc/xdg/waybar/language.py",
         "return-type": "json",
         "interval": 1,
-        "on-click": "swaymsg input type:keyboard xkb_switch_layout next",
-        "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev"
+        "on-click": "swaymsg input type:keyboard xkb_switch_layout next ",
+        "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev "
     },
 
     "custom/weather": {
-        "exec": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w' | sed 's/+//g'",
+        "exec": "curl -s 'wttr.in/Moscow?format=%c+%t+%w' | sed 's/+//g'",
         "interval": 3600,
-        "format": "🌦️",
+        "format": "",
         "tooltip-format": "Погода в Вязниках:\n{}\n\nНажмите для подробностей",
         "exec-on-event": "curl -s 'wttr.in/Vyazniki?format=%c+%t+%w\\n%D\\n%h\\n%p'",
         "on-click": "xdg-open 'https://wttr.in/Vyazniki'"
@@ -140,7 +140,7 @@
 
     "cpu": {
         "interval": 5,
-        "format": "  {usage}%",
+        "format": " {usage}%",
         "states": {
             "warning": 70,
             "critical": 90
@@ -150,7 +150,7 @@
 
     "memory": {
         "interval": 5,
-        "format": "  {percentage}%",
+        "format": " {percentage}%",
         "states": {
             "warning": 70,
             "critical": 90
@@ -160,8 +160,8 @@
     },
 
     "pulseaudio": {
-        "format": "{icon}  {volume}%",
-        "format-bluetooth": " {icon}  {volume}%",
+        "format": "{icon} {volume}%",
+        "format-bluetooth": " {icon} {volume}%",
         "format-muted": "  Muted",
         "format-icons": {
             "headphone": "",
