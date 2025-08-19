@@ -61,9 +61,9 @@ bindsym Mod1+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill 
 bindsym Mod1+$mod+Print exec bash -c 'if pgrep -x wf-recorder >/dev/null; then pkill -x wf-recorder; notify-send "Скринкаст остановлен"; else mkdir -p $screencast_dir && wf-recorder -f "$screencast_dir/recording_$(date +%Y%m%d_%H%M%S).mp4" && notify-send "Скринкаст запущен (весь экран)"; fi'
 
 # Звук
-bindsym F5 exec amixer -D pulse sset Master 5%-
-bindsym F6 exec amixer -D pulse sset Master 5%+
-bindsym F7 exec amixer -D pulse sset Master toggle
+bindsym F2 exec amixer -D pulse sset Master 5%-
+bindsym F3 exec amixer -D pulse sset Master 5%+
+bindsym F1 exec amixer -D pulse sset Master toggle
 
 # Отключение ускорения мыши
 input "type:pointer" accel_profile flat
