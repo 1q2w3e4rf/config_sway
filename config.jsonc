@@ -65,12 +65,6 @@
         "interval": 3,
         "on-click": "nmtui-connect"
     },
-    // Остальные модули...
-    "sway/window": {
-        "format": "{}",
-        "max-length": 50,
-        "tooltip": true
-    },
 
     "custom/launcher": {
         "format": "",
