@@ -1,3 +1,13 @@
+#!.config/rofi/config.rasi
+# ======================================================
+# Config для sway
+# Версия: 0.1.2
+# Последнее обновление: 22.08.25
+# Автор: 1q2w3e4rf
+# GitHub: https://github.com/1q2w3e4rf/config_sway
+# ======================================================
+
+/* Основная конфигурация Rofi - меню запуска приложений */
 configuration {
     modi: "run";
     font: "JetBrains Mono 11";
@@ -11,6 +21,7 @@ configuration {
     background-color: transparent;
 }
 
+/* Стилизация основного окна Rofi */
 window {
     background-color: #1e1e2ee6;
     border: 2px;
@@ -19,6 +30,7 @@ window {
     padding: 16px;
 }
 
+/* Стилизация панели ввода (поиска) */
 inputbar {
     padding: 8px 12px;
     border: 1px;
@@ -27,16 +39,19 @@ inputbar {
     children: [prompt, entry];
 }
 
+/* Стилизация текста подсказки */
 prompt {
     text-color: #f5c2e7;
 }
 
+/* Стилизация поля ввода */
 entry {
     text-color: #f5c2e7;
     placeholder: "Search...";
     placeholder-color: #f5c2e799;
 }
 
+/* Стилизация элементов списка приложений */
 element {
     padding: 12px;
     border-radius: 8px;
@@ -44,6 +59,7 @@ element {
     background-color: transparent;
 }
 
+/* Стилизация выбранного элемента списка */
 element selected {
     background-color: #cba6f7;
     text-color: #1e1e2e;
