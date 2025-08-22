@@ -12,13 +12,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from datetime import datetime, timedelta
 
-# Конфигурация
 USER = os.getenv('USER')
 HOME = Path.home()
 TEMP_DIR = TemporaryDirectory()
 TEMP_PATH = Path(TEMP_DIR.name)
 
-# Пути
 CONFIG_PATHS = {
     'sway_config': HOME / '.config' / 'sway' / 'config',
     'waybar_config': HOME / '.config' / 'waybar' / 'config.jsonc',
@@ -28,10 +26,11 @@ CONFIG_PATHS = {
     'local_bin': HOME / '.local' / 'bin',
     'fonts_dir': HOME / '.local' / 'share' / 'fonts',
     'rofi_config': HOME / '.config' / 'rofi' / 'config.rasi',
-    'alacritty_config': HOME / '.config' / 'alacritty' / 'alacritty.toml'
+    'alacritty_config': HOME / '.config' / 'alacritty' / 'alacritty.toml',
+    'swaync_config': HOME / '.config' / 'swaync' / 'config.json',
+    'swaync_style': HOME / '.config' / 'swaync' / 'style.css'
 }
 
-# URL для загрузки
 DOWNLOAD_URLS = {
     'nerd_fonts': "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip",
     'noto_emoji': "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf",
@@ -39,7 +38,9 @@ DOWNLOAD_URLS = {
     'waybar_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.jsonc",
     'waybar_style': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/style.css",
     'sample_photo': "https://github.com/1q2w3e4rf/config_sway/raw/main/1.jpg",
-    'rofi_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.rasi"
+    'rofi_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/config.rasi",
+    'swaync_config': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/swaync_config.json",
+    'swaync_style': "https://raw.githubusercontent.com/1q2w3e4rf/config_sway/main/swaync_style.css"
 }
 
 class Colors:
@@ -53,7 +54,6 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 def format_size(size):
-    """Форматирование размера в читаемый вид"""
     for unit in ['B', 'KB', 'MB', 'GB']:
         if size < 1024.0:
             return f"{size:.1f} {unit}"
@@ -61,7 +61,6 @@ def format_size(size):
     return f"{size:.1f} TB"
 
 def run_cmd(cmd, sudo=False, password=None):
-    """Выполнить команду с обработкой ошибок"""
     try:
         if sudo:
             if not password:
@@ -83,7 +82,6 @@ def run_cmd(cmd, sudo=False, password=None):
         return False
 
 def download_file_with_progress(url, dest):
-    """Скачать файл по URL с отображением прогресса"""
     print(f"{Colors.OKBLUE}Скачивание {url}...{Colors.ENDC}")
     try:
         start_time = time.time()
@@ -101,12 +99,11 @@ def download_file_with_progress(url, dest):
                         downloaded += len(chunk)
                         
                         now = time.time()
-                        if now - last_print >= 1.0:  # Обновляем каждую секунду
+                        if now - last_print >= 1.0:
                             elapsed = now - start_time
                             speed = downloaded / elapsed if elapsed > 0 else 0
                             remaining = (total_size - downloaded) / speed if speed > 0 else 0
                             
-                            # Форматируем оставшееся время
                             if remaining > 3600:
                                 remaining_str = str(timedelta(seconds=int(remaining)))
                             elif remaining > 60:
@@ -124,7 +121,7 @@ def download_file_with_progress(url, dest):
                             )
                             last_print = now
             
-            print()  # Новая строка после завершения загрузки
+            print()
             return True
             
     except requests.exceptions.RequestException as e:
@@ -135,7 +132,6 @@ def download_file_with_progress(url, dest):
         return False
 
 def install_yay():
-    """Установка yay если его нет"""
     print(f"{Colors.HEADER}Проверка yay...{Colors.ENDC}")
     if not shutil.which('yay'):
         print(f"{Colors.OKBLUE}Установка yay...{Colors.ENDC}")
@@ -149,67 +145,26 @@ def install_yay():
         print(f"{Colors.OKGREEN}yay уже установлен{Colors.ENDC}")
 
 def install_packages():
-    """Установка системных пакетов через yay"""
     print(f"{Colors.HEADER}Установка пакетов...{Colors.ENDC}")
     
     packages = [
-        # Основные компоненты Sway
         'sway', 'swaybg', 'swayidle', 'swaylock', 'swaync',
-
-        # Waybar и его зависимости
         'waybar', 'gtk-layer-shell', 'libdbusmenu-gtk3',
-
-        # Терминал и лаунчеры
         'alacritty', 'rofi', 'wofi', 'wlogout',
-
-        # Шрифты и иконки
-        'ttf-jetbrains-mono-nerd',
-        'noto-fonts-emoji',
-        'ttf-font-awesome',
-        'nerd-fonts-complete',
-        'adwaita-icon-theme',
-
-        # Аудио
+        'ttf-jetbrains-mono-nerd', 'noto-fonts-emoji', 'ttf-font-awesome',
+        'nerd-fonts-complete', 'adwaita-icon-theme',
         'pulseaudio', 'pulseaudio-alsa', 'pulseaudio-bluetooth',
-        'pavucontrol', 'pamixer', 'wireplumber',
-        'playerctl', 'libpulse',
-
-        # Сеть
-        'networkmanager', 'network-manager-applet',
-        'wireless_tools', 'iwd', 'blueman',
-        'bluez', 'bluez-utils',
-
-        # Системные утилиты
-        'brightnessctl', 'light', 'upower',
-        'polkit-gnome', 'gnome-keyring',
-        'libnotify', 'dunst',
-
-        # Скриншоты и запись экрана
-        'grim', 'slurp', 'wf-recorder',
-        'wl-clipboard', 'clipman',
-
-        # Python модули
-        'python', 'python-pip',
-        'python-dbus-next', 'python-requests',
-        'python-gobject', 'python-i3ipc',
-
-        # Графические зависимости
-        'qt5-wayland', 'qt6-wayland',
-        'xdg-desktop-portal-wlr',
-        'gtk3', 'gtk-engine-murrine',
-        'mesa', 'glu', 'vulkan-radeon',
-
-        # Дополнительные инструменты
-        'jq', 'htop', 'curl', 'imv',
-        'zathura', 'zathura-pdf-mupdf',
-        'nmtui', 'nwg-look-bin',
-
-        # Для VPN модуля
-        'wireguard-tools', 'openvpn',
-
-        # Системные библиотеки
-        'jsoncpp', 'libmpdclient',
-        'libnl', 'libepoxy', 'scdoc'
+        'pavucontrol', 'pamixer', 'wireplumber', 'playerctl', 'libpulse',
+        'networkmanager', 'network-manager-applet', 'wireless_tools', 'iwd',
+        'blueman', 'bluez', 'bluez-utils', 'brightnessctl', 'light', 'upower',
+        'polkit-gnome', 'gnome-keyring', 'libnotify', 'dunst', 'grim', 'slurp',
+        'wf-recorder', 'wl-clipboard', 'clipman', 'python', 'python-pip',
+        'python-dbus-next', 'python-requests', 'python-gobject', 'python-i3ipc',
+        'qt5-wayland', 'qt6-wayland', 'xdg-desktop-portal-wlr', 'gtk3',
+        'gtk-engine-murrine', 'mesa', 'glu', 'vulkan-radeon', 'jq', 'htop',
+        'curl', 'imv', 'zathura', 'zathura-pdf-mupdf', 'nmtui', 'nwg-look-bin',
+        'wireguard-tools', 'openvpn', 'jsoncpp', 'libmpdclient', 'libnl',
+        'libepoxy', 'scdoc'
     ]
 
     if not run_cmd(f"yay -S --needed --noconfirm {' '.join(packages)}"):
@@ -219,96 +174,85 @@ def install_packages():
                 print(f"{Colors.FAIL}Не удалось установить {pkg}{Colors.ENDC}")
 
 def install_fonts():
-    """Установка шрифтов"""
     print(f"{Colors.HEADER}Установка шрифтов...{Colors.ENDC}")
     
     os.makedirs(CONFIG_PATHS['fonts_dir'], exist_ok=True)
     
-    # Nerd Fonts
     nerd_zip = TEMP_PATH / "nerd_fonts.zip"
     if download_file_with_progress(DOWNLOAD_URLS['nerd_fonts'], nerd_zip):
         with zipfile.ZipFile(nerd_zip, 'r') as zip_ref:
             zip_ref.extractall(CONFIG_PATHS['fonts_dir'])
     
-    # Noto Emoji
     emoji_font = TEMP_PATH / "NotoColorEmoji.ttf"
     if download_file_with_progress(DOWNLOAD_URLS['noto_emoji'], emoji_font):
         shutil.copy(emoji_font, CONFIG_PATHS['fonts_dir'])
     
-    # Обновление кэша шрифтов
     run_cmd("fc-cache -fv")
 
 def setup_configs():
-    """Настройка конфигураций"""
     print(f"{Colors.HEADER}Настройка конфигураций...{Colors.ENDC}")
     
-    # Создание директорий
     os.makedirs(HOME / '.config' / 'sway', exist_ok=True)
     os.makedirs(HOME / '.config' / 'waybar', exist_ok=True)
     os.makedirs(HOME / '.config' / 'rofi', exist_ok=True)
     os.makedirs(HOME / '.config' / 'alacritty', exist_ok=True)
+    os.makedirs(HOME / '.config' / 'swaync', exist_ok=True)
     os.makedirs(HOME / 'photo', exist_ok=True)
     os.makedirs(CONFIG_PATHS['local_bin'], exist_ok=True)
     
-    # Загрузка конфигов
     print(f"{Colors.OKBLUE}Загрузка конфигураций...{Colors.ENDC}")
     
-    # Sway config
     sway_config_temp = TEMP_PATH / "sway_config"
     if download_file_with_progress(DOWNLOAD_URLS['sway_config'], sway_config_temp):
         shutil.copy(sway_config_temp, CONFIG_PATHS['sway_config'])
     
-    # Waybar config
     waybar_config_temp = TEMP_PATH / "waybar_config"
     if download_file_with_progress(DOWNLOAD_URLS['waybar_config'], waybar_config_temp):
         shutil.copy(waybar_config_temp, CONFIG_PATHS['waybar_config'])
     
-    # Waybar style
     waybar_style_temp = TEMP_PATH / "waybar_style"
     if download_file_with_progress(DOWNLOAD_URLS['waybar_style'], waybar_style_temp):
         shutil.copy(waybar_style_temp, CONFIG_PATHS['waybar_style'])
     
-    # Rofi config
     rofi_config_temp = TEMP_PATH / "rofi_config"
     if download_file_with_progress(DOWNLOAD_URLS['rofi_config'], rofi_config_temp):
         shutil.copy(rofi_config_temp, CONFIG_PATHS['rofi_config'])
     
-    # Фото
     photo_temp = TEMP_PATH / "1.jpg"
     if download_file_with_progress(DOWNLOAD_URLS['sample_photo'], photo_temp):
         shutil.copy(photo_temp, CONFIG_PATHS['photo'])
     
-    # Конфиг Alacritty
+    swaync_config_temp = TEMP_PATH / "swaync_config"
+    if download_file_with_progress(DOWNLOAD_URLS['swaync_config'], swaync_config_temp):
+        shutil.copy(swaync_config_temp, CONFIG_PATHS['swaync_config'])
+    
+    swaync_style_temp = TEMP_PATH / "swaync_style"
+    if download_file_with_progress(DOWNLOAD_URLS['swaync_style'], swaync_style_temp):
+        shutil.copy(swaync_style_temp, CONFIG_PATHS['swaync_style'])
+    
     alacritty_config = """
 [window]
 opacity = 0.9
 padding.x = 12
 padding.y = 12
 decorations = "full"
-decorations_theme_variant = "dark"  # Для чёрного интерфейса
+decorations_theme_variant = "dark"
 
 [font]
 size = 14.0
-
-# Используем Fira Code с явным указанием стилей
 normal.family = "Fira Code"
 bold.family = "Fira Code"
 italic.family = "Fira Code"
 bold_italic.family = "Fira Code"
-
-# Фикс съезжающих букв:
-glyph_offset.y = 1  # Корректировка по вертикали
+glyph_offset.y = 1
 offset.x = 0
 offset.y = 1
 
 [colors]
-# Чёрный терминал (инверсия цветов)
-primary.foreground = "#ffffff"  # Белый текст
-primary.background = "#000000"  # Чёрный фон
-
-# Цвета курсора (инвертированные)
-cursor.text = "#000000"  # Чёрный текст под курсором
-cursor.cursor = "#ffffff"  # Белый курсор
+primary.foreground = "#ffffff"
+primary.background = "#000000"
+cursor.text = "#000000"
+cursor.cursor = "#ffffff"
 
 [colors.normal]
 black = "#000000"
@@ -321,12 +265,10 @@ white = "#eeeeee"
     with open(CONFIG_PATHS['alacritty_config'], 'w') as f:
         f.write(alacritty_config.strip())
     
-    # Скрипты Waybar
     print(f"{Colors.OKBLUE}Настройка скриптов Waybar...{Colors.ENDC}")
     setup_waybar_scripts()
 
 def setup_waybar_scripts():
-    """Установка скриптов для Waybar в .config/waybar"""
     scripts = {
         'language.py': """#!/usr/bin/env python3
 import json
@@ -345,74 +287,7 @@ def get_lang():
     except:
         return {"text": "⌨️ Error", "tooltip": "Ошибка получения раскладки"}
 
-print(json.dumps(get_lang()))""",
-        
-        'mediaplayer.py': """#!/usr/bin/env python3
-import json
-import subprocess
-
-def get_media():
-    try:
-        status = subprocess.check_output(["playerctl", "status"]).decode().strip()
-        if status == "Playing":
-            artist = subprocess.check_output(["playerctl", "metadata", "artist"]).decode().strip()
-            title = subprocess.check_output(["playerctl", "metadata", "title"]).decode().strip()
-            text = f"{artist} - {title}" if artist else title
-            return {
-                "text": text[:40] + "..." if len(text) > 40 else text,
-                "tooltip": f"Сейчас играет: {text}",
-                "class": "playing"
-            }
-        return {"text": "", "tooltip": "Нет активного плеера"}
-    except:
-        return {"text": "", "tooltip": "Ошибка плеера"}
-
-print(json.dumps(get_media()))""",
-        
-        'power-menu.py': """#!/usr/bin/env python3
-import subprocess
-import json
-
-def get_power_menu():
-    return {
-        "text": "⏻",
-        "tooltip": "Меню питания",
-        "class": "power-menu"
-    }
-
-print(json.dumps(get_power_menu()))""",
-        
-        'wifi-quality.py': """#!/usr/bin/env python3
-import json
-import subprocess
-
-def get_wifi_quality():
-    try:
-        result = subprocess.run(['iwconfig'], capture_output=True, text=True)
-        lines = result.stdout.split('\\n')
-        for line in lines:
-            if 'Link Quality' in line:
-                quality = line.split('Link Quality=')[1].split()[0]
-                percent = int(quality.split('/')[0]) / int(quality.split('/')[1]) * 100
-                icon = "📶"
-                if percent > 75:
-                    cls = "good"
-                elif percent > 50:
-                    cls = "moderate"
-                elif percent > 25:
-                    cls = "poor"
-                else:
-                    cls = "bad"
-                return {
-                    "text": f"{icon} {int(percent)}%",
-                    "tooltip": f"Качество Wi-Fi: {int(percent)}%",
-                    "class": cls
-                }
-        return {"text": "⚠️ Offline", "tooltip": "Нет соединения Wi-Fi"}
-    except:
-        return {"text": "❌ Error", "tooltip": "Ошибка получения качества Wi-Fi"}
-
-print(json.dumps(get_wifi_quality()))"""
+print(json.dumps(get_lang()))"""
     }
 
     for script_name, script_content in scripts.items():
@@ -421,7 +296,6 @@ print(json.dumps(get_wifi_quality()))"""
             f.write(script_content)
         os.chmod(script_path, 0o755)
     
-    # Создаем скрипт для выключения/перезагрузки
     power_script = CONFIG_PATHS['local_bin'] / 'power-menu'
     with open(power_script, 'w') as f:
         f.write("""#!/bin/sh
@@ -446,10 +320,8 @@ esac
     os.chmod(power_script, 0o755)
 
 def setup_services():
-    """Настройка systemd сервисов"""
     print(f"{Colors.HEADER}Настройка сервисов...{Colors.ENDC}")
     
-    # Автозапуск Sway
     xdg_config_dir = HOME / '.config' / 'systemd' / 'user'
     xdg_config_dir.mkdir(parents=True, exist_ok=True)
     
@@ -474,31 +346,20 @@ WantedBy=graphical-session.target
     run_cmd("systemctl --user enable sway.service")
     run_cmd("systemctl --user daemon-reload")
     
-    # Включение linger для пользователя
     run_cmd(f"sudo loginctl enable-linger {USER}", sudo=True)
 
 def main():
     print(f"{Colors.HEADER}{Colors.BOLD}Полная автоматическая настройка системы{Colors.ENDC}")
     
-    # Проверка на root
     if os.geteuid() == 0:
         print(f"{Colors.FAIL}Ошибка: Не запускайте скрипт от root!{Colors.ENDC}")
         sys.exit(1)
     
     try:
-        # Установка yay
         install_yay()
-        
-        # Установка пакетов
         install_packages()
-        
-        # Установка шрифтов
         install_fonts()
-        
-        # Настройка конфигураций
         setup_configs()
-        
-        # Настройка сервисов
         setup_services()
         
         print(f"\n{Colors.OKGREEN}{Colors.BOLD}Настройка успешно завершена!{Colors.ENDC}")
@@ -506,7 +367,7 @@ def main():
         print("- Установлен yay (AUR helper)")
         print("- Установлены все необходимые пакеты через yay")
         print("- Установлены шрифты (Nerd Fonts + Emoji)")
-        print("- Настроены конфиги Sway, Waybar, Rofi, Alacritty")
+        print("- Настроены конфиги Sway, Waybar, Rofi, Alacritty, SwayNC")
         print("- Установлены скрипты Waybar в ~/.config/waybar")
         print("- Настроен автозапуск Sway через systemd")
         print(f"\n{Colors.BOLD}Перезагрузите систему для применения изменений{Colors.ENDC}")
