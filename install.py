@@ -21,7 +21,6 @@ CONFIG_PATHS = {
     'sway_config': HOME / '.config' / 'sway' / 'config',
     'waybar_config': HOME / '.config' / 'waybar' / 'config.jsonc',
     'waybar_style': HOME / '.config' / 'waybar' / 'style.css',
-    'waybar_scripts': HOME / '.config' / 'waybar',
     'photo': HOME / 'photo' / '1.jpg',
     'local_bin': HOME / '.local' / 'bin',
     'fonts_dir': HOME / '.local' / 'share' / 'fonts',
@@ -265,37 +264,10 @@ white = "#eeeeee"
     with open(CONFIG_PATHS['alacritty_config'], 'w') as f:
         f.write(alacritty_config.strip())
     
-    print(f"{Colors.OKBLUE}Настройка скриптов Waybar...{Colors.ENDC}")
-    setup_waybar_scripts()
+    print(f"{Colors.OKBLUE}Настройка скриптов...{Colors.ENDC}")
+    setup_scripts()
 
-def setup_waybar_scripts():
-    scripts = {
-        'language.py': """#!/usr/bin/env python3
-import json
-import subprocess
-
-def get_lang():
-    try:
-        output = subprocess.check_output(["swaymsg", "-t", "get_inputs"]).decode()
-        data = json.loads(output)
-        for device in data:
-            if device["type"] == "keyboard":
-                lang = device["xkb_active_layout_name"]
-                icon = "🇷🇺" if "Russian" in lang else "🇺🇸" if "English" in lang else "⌨️"
-                return {"text": f"{icon} {lang.split()[0]}", "tooltip": f"Язык: {lang}"}
-        return {"text": "⌨️ None", "tooltip": "Не удалось определить раскладку"}
-    except:
-        return {"text": "⌨️ Error", "tooltip": "Ошибка получения раскладки"}
-
-print(json.dumps(get_lang()))"""
-    }
-
-    for script_name, script_content in scripts.items():
-        script_path = CONFIG_PATHS['waybar_scripts'] / script_name
-        with open(script_path, 'w') as f:
-            f.write(script_content)
-        os.chmod(script_path, 0o755)
-    
+def setup_scripts():
     power_script = CONFIG_PATHS['local_bin'] / 'power-menu'
     with open(power_script, 'w') as f:
         f.write("""#!/bin/sh
@@ -368,7 +340,6 @@ def main():
         print("- Установлены все необходимые пакеты через yay")
         print("- Установлены шрифты (Nerd Fonts + Emoji)")
         print("- Настроены конфиги Sway, Waybar, Rofi, Alacritty, SwayNC")
-        print("- Установлены скрипты Waybar в ~/.config/waybar")
         print("- Настроен автозапуск Sway через systemd")
         print(f"\n{Colors.BOLD}Перезагрузите систему для применения изменений{Colors.ENDC}")
     
