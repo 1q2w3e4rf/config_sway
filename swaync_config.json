@@ -1,38 +1,20 @@
-#!.config/swaync/config.json
-# ======================================================
-# Config для swaync
-# Версия: 0.0.2
-# Последнее обновление: 22.08.25
-# Автор: 1q2w3e4rf
-# GitHub: https://github.com/1q2w3e4rf/config_sway
-# ======================================================
-
 {
-  // Основные настройки позиционирования и отображения центра уведомлений
   "positionX": "right",
-  "positionY": "top",
+  "positionY": "top", 
   "layer": "overlay",
   "control-center-layer": "top",
   "layer-shell": true,
   "cssPriority": "user",
-
-  // Настройки отображения изображений в уведомлениях
   "notification-icon-size": 64,
   "notification-body-image-height": 100,
   "notification-body-image-width": 200,
-
-  // Таймауты для различных типов уведомлений
   "timeout": 10,
   "timeout-low": 5,
   "timeout-critical": 0,
-
-  // Размеры и внешний вид окна уведомлений
   "notification-window-width": 500,
   "keyboard-shortcuts": true,
   "image-visibility": "always",
   "transition-time": 200,
-
-  // Поведение уведомлений при взаимодействии
   "hide-on-clear": true,
   "hide-on-action": true,
   "script-fail-notify": true
