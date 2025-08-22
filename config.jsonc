@@ -73,11 +73,11 @@
 
     // Модуль переключения раскладки клавиатуры
     "custom/language": {
-        "exec": "/etc/xdg/waybar/language.py",
+        "exec": "swaymsg -t get_inputs | jq -r '.[] | select(.type == \"keyboard\") | .xkb_active_layout_name' | head -1 | awk '{if ($0 ~ /Russian/) {print \"{\\\"text\\\":\\\"🇷🇺 Russian\\\",\\\"tooltip\\\":\\\"Русская раскладка\\\"}\"} else if ($0 ~ /English/) {print \"{\\\"text\\\":\\\"🇺🇸 English\\\",\\\"tooltip\\\":\\\"Английская раскладка\\\"}\"} else {print \"{\\\"text\\\":\\\"⌨️ \" substr($0,1,10) \"\\\",\\\"tooltip\\\":\\\"Раскладка: \" $0 \"\\\"}\"}}'",
         "return-type": "json",
         "interval": 1,
-        "on-click": "swaymsg input type:keyboard xkb_switch_layout next ",
-        "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev "
+        "on-click": "swaymsg input type:keyboard xkb_switch_layout next",
+        "on-click-right": "swaymsg input type:keyboard xkb_switch_layout prev"
     },
 
     // Модуль отображения погоды
