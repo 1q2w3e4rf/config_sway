@@ -1,3 +1,12 @@
+#!.config/waybar/style.css
+# ======================================================
+# Config для waybar
+# Версия: 0.1.2
+# Последнее обновление: 22.08.25
+# Автор: 1q2w3e4rf
+# GitHub: https://github.com/1q2w3e4rf/config_sway
+# ======================================================
+
 /* Определение цветовой схемы Catppuccin Macchiato */
 @define-color base   #1e1e2e;
 @define-color mantle #181825;
