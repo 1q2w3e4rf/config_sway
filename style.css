@@ -1,3 +1,4 @@
+/* Определение цветовой схемы Catppuccin Macchiato */
 @define-color base   #1e1e2e;
 @define-color mantle #181825;
 @define-color crust  #11111b;
@@ -29,6 +30,7 @@
 @define-color flamingo  #f2cdcd;
 @define-color rosewater #f5e0dc;
 
+/* Базовые стили для всех элементов */
 * {
     border: none;
     border-radius: 12px;
@@ -38,11 +40,13 @@
     min-height: 0;
 }
 
+/* Основной контейнер Waybar */
 window#waybar {
     background: transparent;
     color: @text;
 }
 
+/* Стили для трех основных секций модулей */
 .modules-left, .modules-center, .modules-right {
     background: @base;
     border: 1px solid @surface0;
@@ -50,22 +54,26 @@ window#waybar {
     margin: 6px 0;
 }
 
+/* Специфичные стили для левой секции */
 .modules-left {
     border-top-left-radius: 16px;
     border-bottom-left-radius: 16px;
     padding-left: 16px;
 }
 
+/* Стили для центральной секции */
 .modules-center {
     border-radius: 16px;
 }
 
+/* Стили для правой секции */
 .modules-right {
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
     padding-right: 16px;
 }
 
+/* Стили для кнопок рабочих пространств */
 #workspaces button {
     padding: 0 8px;
     color: @overlay1;
@@ -89,22 +97,26 @@ window#waybar {
     animation: urgent-flash 3s infinite;
 }
 
+/* Анимация для срочных рабочих пространств */
 @keyframes urgent-flash {
     0% { color: @red; }
     50% { color: @maroon; }
     100% { color: @red; }
 }
 
+/* Стили для отображения активного окна */
 #window {
     font-weight: bold;
     color: @lavender;
 }
 
+/* Стили для модуля часов */
 #clock {
     color: @blue;
     font-weight: bold;
 }
 
+/* Стили для модуля батареи */
 #battery {
     color: @green;
 }
@@ -123,6 +135,7 @@ window#waybar {
     animation: battery-critical 1s infinite;
 }
 
+/* Анимации для состояний батареи */
 @keyframes battery-warning {
     0% { color: @peach; }
     50% { color: @yellow; }
@@ -135,14 +148,17 @@ window#waybar {
     100% { opacity: 1; }
 }
 
+/* Стили для модуля процессора */
 #cpu {
     color: @sapphire;
 }
 
+/* Стили для модуля памяти */
 #memory {
     color: @mauve;
 }
 
+/* Стили для модуля температуры */
 #temperature {
     color: @flamingo;
 }
@@ -151,6 +167,7 @@ window#waybar {
     color: @red;
 }
 
+/* Стили для модуля сети */
 #network {
     color: @sky;
 }
@@ -159,6 +176,7 @@ window#waybar {
     color: @red;
 }
 
+/* Стили для модуля аудио */
 #pulseaudio {
     color: @pink;
 }
@@ -167,18 +185,20 @@ window#waybar {
     color: @maroon;
 }
 
+/* Стили для кастомного медиа-модуля */
 #custom-media {
     color: @green;
     font-style: italic;
 }
 
+/* Стили для кастомного лаунчера */
 #custom-launcher {
     color: @lavender;
     font-size: 18px;
     padding-right: 12px;
 }
 
-/* Стили для погоды */
+/* Стили для модуля погоды */
 #custom-weather {
     color: @sapphire;
     padding: 0 8px;
@@ -190,7 +210,7 @@ window#waybar {
     background: @surface0;
 }
 
-/* Стили для качества Wi-Fi */
+/* Стили для модуля качества Wi-Fi */
 #custom-wifi-quality {
     color: @sky;
     padding: 0 8px;
@@ -221,6 +241,7 @@ window#waybar {
     background: @surface0;
 }
 
+/* Стили для системного трея */
 #tray {
     padding-left: 8px;
 }
@@ -234,10 +255,12 @@ window#waybar {
     background-color: @red;
 }
 
+/* Стили для модуля уведомлений */
 #custom-notification {
     font-family: "Font Awesome 6 Free", "Noto Emoji";
 }
 
+/* Стили для всплывающих подсказок */
 tooltip {
     background: @base;
     border: 1px solid @surface0;
